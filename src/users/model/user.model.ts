@@ -12,8 +12,9 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { RoleModel } from 'src/roles/models/role.model';
+import { UserRole } from '../interfaces';
 
-@Table({ tableName: 'users' })
+@Table({ tableName: 'users', paranoid: true })
 export class UserModel extends Model<UserModel> {
   @PrimaryKey
   @Unique
@@ -25,6 +26,11 @@ export class UserModel extends Model<UserModel> {
   @AllowNull(false)
   @Column(DataType.STRING)
   readonly login: string;
+
+  @Unique
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  telegram: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -45,5 +51,5 @@ export class UserModel extends Model<UserModel> {
   roleId: number;
 
   @BelongsTo(() => RoleModel)
-  role: RoleModel;
+  role: UserRole;
 }

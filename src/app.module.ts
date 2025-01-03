@@ -9,6 +9,7 @@ import { winstonConfig } from './configs/winston';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { AccessTokenGuard, RoleGuard } from './common/guards';
+import { OauthModule } from './oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     RolesModule,
     UsersModule,
+    OauthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AccessTokenGuard },

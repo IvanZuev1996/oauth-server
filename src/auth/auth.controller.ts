@@ -22,7 +22,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signup')
   signUp(@Body() dto: SignUpDto) {
-    return 'signup';
+    return this.authService.signUp(dto);
   }
 
   @Public()
@@ -31,7 +31,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signin')
   sigIn(@Body() dto: SignInDto) {
-    return 'signin';
+    return this.authService.signIn(dto);
   }
 
   @Public()
@@ -39,7 +39,7 @@ export class AuthController {
   @ApiCreatedResponse({ schema: TokensResponse })
   @Post('refresh-token')
   refreshToken(@Body() dto: RefreshTokenDto) {
-    return 'refresh-token';
+    return this.authService.refreshToken(dto.refresh_token);
   }
 
   @ApiBearerAuth()
@@ -48,6 +48,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   logout(@GetCurrentUserId() user_id: number) {
-    return 'logout';
+    return this.authService.logout(user_id);
   }
 }

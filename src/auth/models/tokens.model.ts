@@ -1,21 +1,30 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  PrimaryKey,
+  Table,
+  Unique,
+} from 'sequelize-typescript';
 import { TokensCreationAttributes } from '../interfaces';
+import { UserModel } from 'src/users/model/user.model';
 
 @Table({
   tableName: 'user-refresh-tokens',
-  timestamps: false,
 })
-export class RefreshTokenModel extends Model<
-  RefreshTokenModel,
+export class UserRefreshTokenModel extends Model<
+  UserRefreshTokenModel,
   TokensCreationAttributes
 > {
-  @Column({
-    type: DataType.STRING,
-    unique: true,
-    primaryKey: true,
-  })
+  @PrimaryKey
+  @Unique
+  @Column(DataType.STRING)
   readonly token_id: string;
 
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @ForeignKey(() => UserModel)
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   user_id: number;
 }

@@ -9,6 +9,7 @@ import {
   Table,
   Unique,
 } from 'sequelize-typescript';
+import { RolesEnum } from 'src/configs/roles';
 import { UserModel } from 'src/users/model/user.model';
 
 @Table({ tableName: 'roles', timestamps: false })
@@ -21,8 +22,8 @@ export class RoleModel extends Model<RoleModel> {
 
   @Unique
   @AllowNull(false)
-  @Column(DataType.STRING)
-  name: string;
+  @Column(DataType.ENUM(...Object.values(RolesEnum)))
+  name: RolesEnum;
 
   @HasMany(() => UserModel)
   users: UserModel[];

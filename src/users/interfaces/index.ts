@@ -8,11 +8,12 @@ export interface UserProfile {
   login: string;
   password: string;
   email: string;
+  telegram: string;
   isActive: boolean;
   roleId: number;
   createdAt: string;
   updatedAt: string;
 
   /* Relations */
-  role: UserRole;
+  role?: UserRole;
 }
