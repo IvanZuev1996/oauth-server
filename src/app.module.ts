@@ -8,7 +8,7 @@ import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './configs/winston';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
-import { AccessTokenGuard, RoleGuard } from './common/guards';
+import { UserAccessTokenGuard, RoleGuard } from './common/guards';
 import { OauthModule } from './oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -31,7 +31,7 @@ import { AuthModule } from './auth/auth.module';
     OauthModule,
   ],
   providers: [
-    { provide: APP_GUARD, useClass: AccessTokenGuard },
+    { provide: APP_GUARD, useClass: UserAccessTokenGuard },
     {
       provide: APP_GUARD,
       useClass: RoleGuard,
