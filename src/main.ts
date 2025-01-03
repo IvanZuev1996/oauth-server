@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from './common/pipes';
-import { swaggerConfig } from './configs';
+import { swaggerConfig } from './configs/swagger';
 
 const port = process.env.PORT;
 
