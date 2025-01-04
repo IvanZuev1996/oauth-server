@@ -10,7 +10,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { RolesEnum } from 'src/configs/roles';
-import { UserModel } from 'src/users/model/user.model';
+import { UserModel } from 'src/users/models/user.model';
 
 @Table({ tableName: 'roles', timestamps: false })
 export class RoleModel extends Model<RoleModel> {

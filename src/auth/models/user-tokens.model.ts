@@ -9,7 +9,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { TokensCreationAttributes } from '../interfaces';
-import { UserModel } from 'src/users/model/user.model';
+import { UserModel } from 'src/users/models/user.model';
 
 @Table({
   tableName: 'user-refresh-tokens',

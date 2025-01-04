@@ -6,7 +6,7 @@ import { Repository } from 'sequelize-typescript';
 import { RolesEnum } from 'src/configs/roles';
 import { RolesService } from 'src/roles/roles.service';
 
-import { UserModel } from './model/user.model';
+import { UserModel } from './models/user.model';
 import { UserProfile } from './interfaces';
 import sequelize from 'sequelize';
 

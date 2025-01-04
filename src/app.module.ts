@@ -11,6 +11,8 @@ import { UsersModule } from './users/users.module';
 import { UserAccessTokenGuard, RoleGuard } from './common/guards';
 import { OauthModule } from './oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
+import { ClientsModule } from './clients/clients.module';
+import { ScopesModule } from './scopes/scopes.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { AuthModule } from './auth/auth.module';
     RolesModule,
     UsersModule,
     OauthModule,
+    ClientsModule,
+    ScopesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },

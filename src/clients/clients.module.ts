@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common';
+import { ClientsService } from './clients.service';
+import { ClientsController } from './clients.controller';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { ClientModel } from './models/client.model';
+
+@Module({
+  controllers: [ClientsController],
+  providers: [ClientsService],
+  imports: [SequelizeModule.forFeature([ClientModel])],
+})
+export class ClientsModule {}

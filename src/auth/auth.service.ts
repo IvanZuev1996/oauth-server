@@ -22,7 +22,7 @@ import {
   TokensPayload,
 } from './interfaces';
 import { InjectModel } from '@nestjs/sequelize';
-import { UserRefreshTokenModel } from './models/tokens.model';
+import { UserRefreshTokenModel } from './models/user-tokens.model';
 import { RolesEnum } from 'src/configs/roles';
 import {
   USER_EMAIL_EXIST,

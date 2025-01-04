@@ -5,7 +5,7 @@ import { RolesModule } from 'src/roles/roles.module';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { UserModel } from './model/user.model';
+import { UserModel } from './models/user.model';
 
 @Module({
   controllers: [UsersController],
