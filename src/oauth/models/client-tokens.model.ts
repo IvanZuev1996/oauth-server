@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  AutoIncrement,
   Column,
   DataType,
   ForeignKey,
@@ -17,26 +18,26 @@ import { UserModel } from 'src/users/models/user.model';
 export class ClientTokensModel extends Model<ClientTokensModel> {
   @PrimaryKey
   @Unique
-  @Column(DataType.STRING)
-  readonly id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  readonly id: number;
 
   @ForeignKey(() => UserModel)
   @AllowNull(false)
   @Column(DataType.INTEGER)
   userId: number;
 
-  @ForeignKey(() => ClientModel)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
-  clientId: number;
+  @Column(DataType.STRING)
+  clientId: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  accessToken: string;
+  accessTokenId: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  refreshToken: string;
+  refreshTokenId: string;
 
   @AllowNull(false)
   @Column(DataType.ARRAY(DataType.INTEGER))

@@ -4,11 +4,13 @@ import {
   Column,
   DataType,
   Default,
+  ForeignKey,
   Model,
   PrimaryKey,
   Table,
   Unique,
 } from 'sequelize-typescript';
+import { UserModel } from 'src/users/models/user.model';
 
 @Table({ tableName: 'clients' })
 export class ClientModel extends Model<ClientModel> {
@@ -17,6 +19,11 @@ export class ClientModel extends Model<ClientModel> {
   @AutoIncrement
   @Column(DataType.INTEGER)
   readonly id: number;
+
+  @AllowNull(false)
+  @ForeignKey(() => UserModel)
+  @Column(DataType.INTEGER)
+  readonly userId: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -46,9 +53,4 @@ export class ClientModel extends Model<ClientModel> {
   @Default(null)
   @Column(DataType.STRING)
   img: string;
-
-  @AllowNull(true)
-  @Default(null)
-  @Column(DataType.STRING)
-  description: string;
 }

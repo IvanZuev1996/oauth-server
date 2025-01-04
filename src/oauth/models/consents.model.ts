@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  AutoIncrement,
   Column,
   DataType,
   ForeignKey,
@@ -8,7 +9,6 @@ import {
   Table,
   Unique,
 } from 'sequelize-typescript';
-import { ClientModel } from 'src/clients/models/client.model';
 import { UserModel } from 'src/users/models/user.model';
 
 @Table({
@@ -17,18 +17,18 @@ import { UserModel } from 'src/users/models/user.model';
 export class ConsentsModel extends Model<ConsentsModel> {
   @PrimaryKey
   @Unique
-  @Column(DataType.STRING)
-  readonly id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  readonly id: number;
 
   @ForeignKey(() => UserModel)
   @AllowNull(false)
   @Column(DataType.INTEGER)
   userId: number;
 
-  @ForeignKey(() => ClientModel)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
-  clientId: number;
+  @Column(DataType.STRING)
+  clientId: string;
 
   @AllowNull(false)
   @Column(DataType.ARRAY(DataType.INTEGER))

@@ -19,6 +19,13 @@ export const EMAIL_ALREADY_EXIST = 'Почта уже занята';
 export const EMAIL_EQUAL_CURRENT = 'Вы ввели текущую почту';
 export const TG_EQUAL_CURRENT = 'Вы ввели текущий телеграм';
 
+/* CLIENT */
+export const CLIENT_NOT_FOUND = 'Приложение не найдено';
+export const CLIENT_NOT_AVAILABLE = 'Приложение не доступно';
+
+/* OAUTH */
+export const CODE_CHALLENGE_METHOD_INCORRECT = 'Поддерживается только S256';
+
 /* TELEGRAM */
 export const TG_CONFIRM_CODE = 'Код подтверждения - ';
 export const TG_SEND_LOGIN = 'Ваш логин - ';
