@@ -1,8 +1,11 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { RolesEnum } from 'src/configs/roles';
 import { UsersService } from './users.service';
+import { GetCurrentClient, OAuth } from 'src/common/decorators';
+import { OAuthTokenPayload } from 'src/oauth/interfaces';
+
 const { ADMIN, EMPLOYEE, MANAGER } = RolesEnum;
 
 @ApiTags('users')
@@ -17,9 +20,9 @@ export class UsersController {
     return 'Hello';
   }
 
-  @ApiBearerAuth()
+  @OAuth()
   @Get('test')
-  testOauth() {
+  testOauth(@GetCurrentClient() client: OAuthTokenPayload) {
     return 'OAuth is validated';
   }
 }

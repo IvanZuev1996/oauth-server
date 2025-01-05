@@ -11,7 +11,6 @@ export class OAuthAccessTokenGuard extends AuthGuard('oauth-jwt') {
   }
 
   canActivate(context: ExecutionContext) {
-    console.log('fewfewfew');
     const isOAuthRoute = this.reflector.getAllAndOverride(OAUTH_METADATA, [
       context.getHandler(),
       context.getClass(),

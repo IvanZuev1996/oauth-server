@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query, Redirect } from '@nestjs/common';
 import { OauthService } from './oauth.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthorizeDto, ExchangeAuthCodeDto, RefreshOAuthTokenDto } from './dto';
-import { GetCurrentUserId, Public, Test } from 'src/common/decorators';
+import { GetCurrentUserId, Public } from 'src/common/decorators';
 
 @ApiTags('OAuth')
 @Controller('oauth')

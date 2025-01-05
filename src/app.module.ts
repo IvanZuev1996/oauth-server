@@ -20,9 +20,6 @@ import { ScopesModule } from './scopes/scopes.module';
 
 @Module({
   imports: [
-    HttpModule,
-    AuthModule,
-    OauthModule,
     WinstonModule.forRoot(winstonConfig),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -33,6 +30,9 @@ import { ScopesModule } from './scopes/scopes.module';
       inject: [ConfigService],
       useFactory: (c: ConfigService) => sequelizeConfig(c),
     }),
+    HttpModule,
+    AuthModule,
+    OauthModule,
     RolesModule,
     UsersModule,
     ClientsModule,
@@ -40,7 +40,7 @@ import { ScopesModule } from './scopes/scopes.module';
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },
-    // { provide: APP_GUARD, useClass: OAuthAccessTokenGuard },
+    { provide: APP_GUARD, useClass: OAuthAccessTokenGuard },
     {
       provide: APP_GUARD,
       useClass: RoleGuard,
