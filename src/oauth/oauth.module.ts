@@ -7,10 +7,11 @@ import { ConsentsModel } from './models/consents.model';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { ClientsModule } from 'src/clients/clients.module';
 import { JwtModule } from '@nestjs/jwt';
+import { OAuthAccessTokenStrategy } from './strategies';
 
 @Module({
   controllers: [OauthController],
-  providers: [OauthService],
+  providers: [OauthService, OAuthAccessTokenStrategy],
   imports: [
     ClientsModule,
     SequelizeModule.forFeature([

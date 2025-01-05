@@ -4,12 +4,15 @@ import { OAuthCodesModel } from './models/oauth-codes.model';
 import { Repository } from 'sequelize-typescript';
 import { ClientTokensModel } from './models/client-tokens.model';
 import { ConsentsModel } from './models/consents.model';
-import { AuthorizeDto, ExchangeAuthCodeDto } from './dto';
-import { BadRequestException } from 'src/common/exceptions';
+import { AuthorizeDto, ExchangeAuthCodeDto, RefreshOAuthTokenDto } from './dto';
+import {
+  BadRequestException,
+  UnauthorizedException,
+} from 'src/common/exceptions';
 import { ACCESS_DENIED, CODE_CHALLENGE_METHOD_INCORRECT } from 'src/constants';
 import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
-import { addMinutes } from 'date-fns';
+import { addMinutes, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
 import crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -75,7 +78,6 @@ export class OauthService {
       scope,
     });
 
-    console.log('CODE: ', code);
     const url = `${client.redirectUri}?code=${code}&state=${state}`;
     return { url };
   }
@@ -89,10 +91,15 @@ export class OauthService {
     });
     if (!oauthCode) throw new BadRequestException('code', ACCESS_DENIED);
 
-    this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
+    // TODO:
+    // this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
+    const activeToken = await this.tokensRepository.findOne({
+      where: { clientId },
+    });
+    if (activeToken) await activeToken.destroy();
     await oauthCode.destroy();
 
-    const tokensPayload: OAuthTokenPayload = {
+    const tokensPayload = {
       clientId,
       clientName: client.name,
       userId: oauthCode.userId,
@@ -112,6 +119,10 @@ export class OauthService {
     });
 
     return { access_token, refresh_token, type, scope: tokensPayload.scope };
+  }
+
+  async refreshOAuthToken(dto: RefreshOAuthTokenDto) {
+    const { refreshToken } = dto;
   }
 
   /* Internal */
@@ -161,4 +172,16 @@ export class OauthService {
     const options = { secret, expiresIn };
     return await this.jwtService.signAsync(payload, options);
   }
+
+  async validateAccessTokenByTokenId(tokenId: string) {
+    const token = await this.tokensRepository.findOne({
+      where: { accessTokenId: tokenId },
+    });
+    const isTokenValid = token && isAfter(token.expiresAt, new Date());
+    if (!isTokenValid) throw new UnauthorizedException();
+
+    return token;
+  }
+
+  // async getTokenRecordByRefreshToken
 }

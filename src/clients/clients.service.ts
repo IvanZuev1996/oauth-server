@@ -78,4 +78,14 @@ export class ClientsService {
 
     return client;
   }
+
+  async getClientSecretByClientId(clientId: string) {
+    const client = await this.clientsRepository.findOne({
+      where: { clientId },
+      attributes: ['clientSecret'],
+    });
+    if (!client) throw new NotFoundException('client', CLIENT_NOT_FOUND);
+
+    return client.clientSecret;
+  }
 }
