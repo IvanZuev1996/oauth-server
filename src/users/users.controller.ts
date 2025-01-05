@@ -1,12 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-
-import { RolesEnum } from 'src/configs/roles';
 import { UsersService } from './users.service';
-import { GetCurrentClient, OAuth } from 'src/common/decorators';
-import { OAuthTokenPayload } from 'src/oauth/interfaces';
-
-const { ADMIN, EMPLOYEE, MANAGER } = RolesEnum;
+import { GetCurrentUserId } from 'src/common/decorators';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -16,13 +11,7 @@ export class UsersController {
 
   @ApiOperation({ summary: 'get user info (ALL)' })
   @Get('me')
-  getMe() {
-    return 'Hello';
-  }
-
-  @OAuth()
-  @Get('test')
-  testOauth(@GetCurrentClient() client: OAuthTokenPayload) {
-    return 'OAuth is validated';
+  getMe(@GetCurrentUserId() userId: number) {
+    return this.usersService.getMe(userId);
   }
 }

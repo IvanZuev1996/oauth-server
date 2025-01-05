@@ -1,10 +1,10 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { OAuthTokenPayload } from 'src/oauth/interfaces';
 
-export const GetCurrentClient = createParamDecorator<keyof OAuthTokenPayload>(
-  (key, context: ExecutionContext) => {
+export const GetCurrentClientId = createParamDecorator(
+  (_: undefined, context: ExecutionContext) => {
     const request = context.switchToHttp().getRequest();
     const client = request.user as OAuthTokenPayload;
-    return key ? client[key] : client;
+    return client.clientId;
   },
 );

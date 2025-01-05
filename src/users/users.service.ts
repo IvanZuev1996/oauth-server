@@ -20,6 +20,10 @@ export class UsersService {
     private readonly rolesService: RolesService,
   ) {}
 
+  async getMe(userId: number) {
+    return await this.userRepository.findByPk(userId);
+  }
+
   async create(user: Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>) {
     return await this.userRepository.create(user);
   }
