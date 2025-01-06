@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { OauthService } from './oauth.service';
 import { OauthController } from './oauth.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { ClientTokensModel } from './models/client-tokens.model';
+import { ClientRefreshTokensModel } from './models/client-refresh-tokens.model';
 import { ConsentsModel } from './models/consents.model';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { ClientsModule } from 'src/clients/clients.module';
@@ -15,7 +15,7 @@ import { OAuthAccessTokenStrategy } from './strategies';
   imports: [
     ClientsModule,
     SequelizeModule.forFeature([
-      ClientTokensModel,
+      ClientRefreshTokensModel,
       ConsentsModel,
       OAuthCodesModel,
     ]),

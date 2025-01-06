@@ -14,14 +14,10 @@ export class AuthorizeDto {
   @IsString()
   readonly clientId: string;
 
-  @ApiProperty({
-    isArray: true,
-    type: 'number',
-  })
+  @ApiProperty()
   @IsNotEmpty()
-  @IsArray()
-  @IsNumberString({}, { each: true })
-  readonly scope: number[];
+  @IsString()
+  readonly scope: string;
 
   @ApiProperty()
   @IsNotEmpty()

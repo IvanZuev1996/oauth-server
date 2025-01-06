@@ -1,6 +1,5 @@
 import {
   AllowNull,
-  AutoIncrement,
   Column,
   DataType,
   ForeignKey,
@@ -9,18 +8,16 @@ import {
   Table,
   Unique,
 } from 'sequelize-typescript';
-import { ClientModel } from 'src/clients/models/client.model';
 import { UserModel } from 'src/users/models/user.model';
 
 @Table({
-  tableName: 'client-tokens',
+  tableName: 'client-refresh-tokens',
 })
-export class ClientTokensModel extends Model<ClientTokensModel> {
+export class ClientRefreshTokensModel extends Model<ClientRefreshTokensModel> {
   @PrimaryKey
   @Unique
-  @AutoIncrement
-  @Column(DataType.INTEGER)
-  readonly id: number;
+  @Column(DataType.STRING)
+  tokenId: string;
 
   @ForeignKey(() => UserModel)
   @AllowNull(false)
@@ -33,15 +30,7 @@ export class ClientTokensModel extends Model<ClientTokensModel> {
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  accessTokenId: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  refreshTokenId: string;
-
-  @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.INTEGER))
-  scope: number[];
+  scope: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)

@@ -13,14 +13,10 @@ export class CreateAppDto {
   @IsString()
   readonly name: string;
 
-  @ApiProperty({
-    isArray: true,
-    type: 'number',
-  })
+  @ApiProperty()
   @IsNotEmpty()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  readonly scope: number[];
+  @IsString()
+  readonly scope: string;
 
   @ApiProperty()
   @IsNotEmpty()
