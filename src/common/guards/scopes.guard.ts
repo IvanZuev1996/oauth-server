@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ACCESS_DENIED, SCOPES_METADATA } from 'src/constants';
+import { ACCESS_DENIED, OAUTH_METADATA, SCOPES_METADATA } from 'src/constants';
 
 @Injectable()
 export class ScopesGuard implements CanActivate {
@@ -22,6 +22,12 @@ export class ScopesGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
+    const isOauth = this.reflector.getAllAndOverride(OAUTH_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!isOauth) return true;
+
     const requiredScopes = this.reflector.getAllAndOverride<string[]>(
       SCOPES_METADATA,
       [context.getHandler(), context.getClass()],
