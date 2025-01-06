@@ -239,8 +239,6 @@ export class OauthService {
     secret: string,
     ttl: number,
   ) {
-    const expiresIn = await this.configService.get('ACCESS_TOKEN_LIFETIME');
-
     const options = { secret, expiresIn: ttl };
     return await this.jwtService.signAsync(payload, options);
   }

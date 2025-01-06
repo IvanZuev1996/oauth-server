@@ -31,7 +31,7 @@ export class ScopeModel extends Model<ScopeModel> {
   @AllowNull(false)
   @Default(true)
   @Column(DataType.BOOLEAN)
-  requires_approval: boolean;
+  requiresApproval: boolean;
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
