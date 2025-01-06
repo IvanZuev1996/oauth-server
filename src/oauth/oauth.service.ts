@@ -278,11 +278,10 @@ export class OauthService {
     }
   }
 
-  async validateAccessTokenByTokenId(tokenId: string) {
+  async validateRefreshTokenByTokenId(tokenId: string) {
     const token = await this.getTokenByTokenId(tokenId);
     const isTokenValid = token && isAfter(token.expiresAt, new Date());
     if (!isTokenValid) throw new UnauthorizedException();
-
     return token;
   }
 }

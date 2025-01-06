@@ -26,13 +26,14 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
         try {
           const jwtPayload: DecodedOAuthTokenPayload =
             this.jwtService.decode(token);
+
           const tokenId = jwtPayload.clientId;
+          await this.oauthService.validateRefreshTokenByTokenId(
+            jwtPayload.tokenId,
+          );
+
           const clientSecret =
             await this.clientsService.getClientSecretByClientId(tokenId);
-
-          await this.oauthService.validateAccessTokenByTokenId(
-            jwtPayload.tokenId || '',
-          );
 
           return done(null, clientSecret);
         } catch (error) {
