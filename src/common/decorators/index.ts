@@ -4,3 +4,4 @@ export * from './get-current-client-id.decorator';
 export * from './public.decorator';
 export * from './roles.decorator';
 export * from './oauth.decorator';
+export * from './scopes.decorator';

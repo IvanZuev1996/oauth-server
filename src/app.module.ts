@@ -12,6 +12,7 @@ import {
   UserAccessTokenGuard,
   RoleGuard,
   OAuthAccessTokenGuard,
+  ScopesGuard,
 } from './common/guards';
 import { OauthModule } from './oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
@@ -41,10 +42,8 @@ import { ScopesModule } from './scopes/scopes.module';
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },
     { provide: APP_GUARD, useClass: OAuthAccessTokenGuard },
-    {
-      provide: APP_GUARD,
-      useClass: RoleGuard,
-    },
+    { provide: APP_GUARD, useClass: RoleGuard },
+    { provide: APP_GUARD, useClass: ScopesGuard },
   ],
 })
 export class AppModule {}
