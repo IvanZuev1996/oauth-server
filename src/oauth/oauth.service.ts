@@ -19,7 +19,6 @@ import { nanoid } from 'nanoid';
 import { addMinutes, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
 import crypto from 'crypto';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
   CreateAuthCodeAttributes,
@@ -43,7 +42,6 @@ export class OauthService {
 
     /* Services */
     private readonly clientsService: ClientsService,
-    private readonly configService: ConfigService,
     private readonly scopesService: ScopesService,
     private jwtService: JwtService,
   ) {}

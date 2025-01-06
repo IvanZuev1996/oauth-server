@@ -1,17 +1,12 @@
 import { Repository } from 'sequelize-typescript';
-import * as argon from 'argon2';
 import { nanoid } from 'nanoid';
-
 import { Injectable } from '@nestjs/common';
-
 import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
 } from 'src/common/exceptions';
-
 import { JwtService } from '@nestjs/jwt';
-
 import { SignInDto, SignUpDto } from './dto';
 import { UsersService } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
@@ -32,6 +27,7 @@ import {
 } from 'src/constants';
 import { Mode } from 'src/types';
 import { RolesService } from 'src/roles/roles.service';
+import * as argon from 'argon2';
 
 @Injectable()
 export class AuthService {
