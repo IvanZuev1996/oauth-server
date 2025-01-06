@@ -6,6 +6,11 @@ export interface OAuthTokenPayload {
   tokenId: string;
 }
 
+export interface DecodedOAuthTokenPayload extends OAuthTokenPayload {
+  exp: number;
+  iat: number;
+}
+
 export interface CreateOAuthTokensAttributes extends OAuthTokenPayload {
   tokenId: string;
 }

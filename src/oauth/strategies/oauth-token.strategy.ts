@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { OAuthTokenPayload } from '../interfaces';
+import { DecodedOAuthTokenPayload, OAuthTokenPayload } from '../interfaces';
 import { ClientsService } from 'src/clients/clients.service';
 import { JwtService } from '@nestjs/jwt';
 import { OauthService } from '../oauth.service';
@@ -24,7 +24,8 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
         done: (...args: any[]) => void,
       ) => {
         try {
-          const jwtPayload = this.jwtService.decode(token) as OAuthTokenPayload;
+          const jwtPayload: DecodedOAuthTokenPayload =
+            this.jwtService.decode(token);
           const tokenId = jwtPayload.clientId;
           const clientSecret =
             await this.clientsService.getClientSecretByClientId(tokenId);

@@ -25,8 +25,10 @@ import {
   CreateAuthCodeAttributes,
   CreateConsentAttributes,
   CreateOAuthTokensAttributes,
+  DecodedOAuthTokenPayload,
   OAuthTokenPayload,
 } from './interfaces';
+import { ScopesService } from 'src/scopes/scopes.service';
 
 @Injectable()
 export class OauthService {
@@ -42,6 +44,7 @@ export class OauthService {
     /* Services */
     private readonly clientsService: ClientsService,
     private readonly configService: ConfigService,
+    private readonly scopesService: ScopesService,
     private jwtService: JwtService,
   ) {}
 
@@ -104,8 +107,10 @@ export class OauthService {
       scope: oauthCode.scope,
       tokenId: '',
     };
+
+    const ttl = await this.calculateScopeTTL(tokensPayload.scope);
     const { access_token, refresh_token, type, refreshTokenId } =
-      await this.generateTokens(tokensPayload, client.clientSecret);
+      await this.generateTokens(tokensPayload, client.clientSecret, ttl);
 
     await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId });
 
@@ -127,7 +132,11 @@ export class OauthService {
     await activeToken.destroy();
 
     const { access_token, refresh_token, type, refreshTokenId } =
-      await this.generateTokens(tokenPayload, client.clientSecret);
+      await this.generateTokens(
+        tokenPayload,
+        client.clientSecret,
+        tokenPayload.exp,
+      );
 
     await this.saveToken({ ...tokenPayload, tokenId: refreshTokenId });
 
@@ -187,17 +196,39 @@ export class OauthService {
 
   // #region: INTERNAL */
 
-  private async generateTokens(payload: OAuthTokenPayload, secret: string) {
+  private async calculateScopeTTL(scope: string) {
+    const scopeKeys = scope.split(' ');
+    const scopes = await this.scopesService.getScopesByKeys(scopeKeys);
+    if (!scopes || !scopes.length) return -1;
+
+    let ttl = -1;
+    for await (const scope of scopes) {
+      if (ttl === -1) {
+        ttl = scope.ttl;
+        continue;
+      }
+      ttl = Math.min(ttl, scope.ttl);
+    }
+    return ttl;
+  }
+
+  private async generateTokens(
+    payload: OAuthTokenPayload,
+    secret: string,
+    ttl: number,
+  ) {
     const refreshTokenId = nanoid();
     const type = 'Bearer';
 
     const access_token = await this.generateAccessToken(
       { ...payload, tokenId: refreshTokenId },
       secret,
+      ttl,
     );
     const refresh_token = await this.generateRefreshToken(
       { ...payload, tokenId: refreshTokenId },
       secret,
+      ttl,
     );
 
     return { type, access_token, refresh_token, refreshTokenId };
@@ -206,20 +237,20 @@ export class OauthService {
   private async generateAccessToken(
     payload: OAuthTokenPayload,
     secret: string,
+    ttl: number,
   ) {
     const expiresIn = await this.configService.get('ACCESS_TOKEN_LIFETIME');
 
-    const options = { secret, expiresIn };
+    const options = { secret, expiresIn: ttl };
     return await this.jwtService.signAsync(payload, options);
   }
 
   private async generateRefreshToken(
     payload: OAuthTokenPayload,
     secret: string,
+    ttl: number,
   ) {
-    const expiresIn = await this.configService.get('REFRESH_TOKEN_LIFETIME');
-
-    const options = { secret, expiresIn };
+    const options = { secret, expiresIn: ttl };
     return await this.jwtService.signAsync(payload, options);
   }
 
@@ -228,7 +259,7 @@ export class OauthService {
     secret: string,
   ) {
     try {
-      const payload = this.jwtService.verify<OAuthTokenPayload>(
+      const payload = this.jwtService.verify<DecodedOAuthTokenPayload>(
         oldRefreshToken,
         { secret },
       );
