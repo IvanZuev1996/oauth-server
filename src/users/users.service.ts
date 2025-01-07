@@ -21,7 +21,9 @@ export class UsersService {
   ) {}
 
   async getMe(userId: number) {
-    return await this.userRepository.findByPk(userId);
+    return await this.userRepository.findByPk(userId, {
+      attributes: { exclude: ['password'] },
+    });
   }
 
   async create(user: Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>) {
