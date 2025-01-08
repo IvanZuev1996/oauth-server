@@ -27,6 +27,10 @@ export class UserModel extends Model<UserModel> {
   @Column(DataType.STRING)
   readonly login: string;
 
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  readonly name: string;
+
   @Unique
   @AllowNull(false)
   @Column(DataType.STRING)

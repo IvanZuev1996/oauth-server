@@ -15,7 +15,10 @@ export class ClientsService {
   ) {}
 
   async getUserApplications(userId: number) {
-    return await this.clientsRepository.findAll({ where: { userId } });
+    return await this.clientsRepository.findAll({
+      where: { userId },
+      attributes: ['clientId', 'name', 'createdAt', 'img'],
+    });
   }
 
   async create(dto: CreateAppDto, userId: number) {

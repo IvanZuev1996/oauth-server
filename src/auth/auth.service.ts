@@ -85,8 +85,8 @@ export class AuthService {
   }
 
   async signIn(dto: SignInDto) {
-    const { login_or_tg, password } = dto;
-    const user = await this.userService.getUserByLoginOrTelegram(login_or_tg);
+    const { loginOrTg, password } = dto;
+    const user = await this.userService.getUserByLoginOrTelegram(loginOrTg);
     if (!user) throw new BadRequestException('wrong', WRONG_SIGNIN_DATA);
 
     const isPwdMatch = await this.comparePassword(user.password, password);

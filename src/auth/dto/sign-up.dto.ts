@@ -19,6 +19,11 @@ export class SignUpDto {
   readonly telegram: string;
 
   @ApiProperty()
+  @IsString()
+  @Length(8, 50)
+  readonly name: string;
+
+  @ApiProperty()
   @IsEmail()
   readonly email: string;
 
