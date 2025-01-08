@@ -28,10 +28,10 @@ export class ClientsController {
   @ApiOperation({ summary: 'get user application by id' })
   @Get(':id')
   getApplicationById(
-    @Param() { id }: GetAppByIdDto,
+    @Param() { clientId }: GetAppByIdDto,
     @GetCurrentUserId() userId: number,
   ) {
-    return this.clientsService.getClientById(id, userId);
+    return this.clientsService.getClientByClientId(clientId, userId);
   }
 
   @ApiBearerAuth()

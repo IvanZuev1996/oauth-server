@@ -31,6 +31,6 @@ export class ConsentsModel extends Model<ConsentsModel> {
   clientId: string;
 
   @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.INTEGER))
-  scope: number[];
+  @Column(DataType.STRING)
+  scope: string;
 }

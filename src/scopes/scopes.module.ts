@@ -9,5 +9,6 @@ import { ServiceModel } from './models/service.model';
   controllers: [ScopesController],
   providers: [ScopesService],
   imports: [SequelizeModule.forFeature([ScopeModel, ServiceModel])],
+  exports: [ScopesService],
 })
 export class ScopesModule {}

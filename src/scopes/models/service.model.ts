@@ -3,7 +3,6 @@ import {
   AutoIncrement,
   Column,
   DataType,
-  Default,
   Model,
   PrimaryKey,
   Table,

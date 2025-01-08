@@ -1,6 +1,5 @@
 import {
   AllowNull,
-  AutoIncrement,
   Column,
   DataType,
   Default,
@@ -16,9 +15,9 @@ import { ServiceModel } from './service.model';
 export class ScopeModel extends Model<ScopeModel> {
   @PrimaryKey
   @Unique
-  @AutoIncrement
-  @Column(DataType.INTEGER)
-  readonly id: number;
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  readonly key: string;
 
   @AllowNull(false)
   @ForeignKey(() => ServiceModel)
@@ -27,16 +26,12 @@ export class ScopeModel extends Model<ScopeModel> {
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  readonly key: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
   title: string;
 
   @AllowNull(false)
   @Default(true)
   @Column(DataType.BOOLEAN)
-  requires_approval: boolean;
+  requiresApproval: boolean;
 
   @AllowNull(false)
   @Column(DataType.INTEGER)

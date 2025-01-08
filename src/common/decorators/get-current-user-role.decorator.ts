@@ -1,5 +1,4 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
-
 import { UserProfile, UserRole } from 'src/users/interfaces';
 
 export const GetCurrentUserRole = createParamDecorator(

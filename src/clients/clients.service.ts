@@ -15,7 +15,10 @@ export class ClientsService {
   ) {}
 
   async getUserApplications(userId: number) {
-    return await this.clientsRepository.findAll({ where: { userId } });
+    return await this.clientsRepository.findAll({
+      where: { userId },
+      attributes: ['clientId', 'name', 'createdAt', 'img'],
+    });
   }
 
   async create(dto: CreateAppDto, userId: number) {
@@ -37,8 +40,8 @@ export class ClientsService {
   }
 
   async update(dto: UpdateAppDto, userId: number) {
-    const { name, scope, img, companyEmail, redirectUri, id } = dto;
-    const client = await this.getClientById(id, userId);
+    const { name, scope, img, companyEmail, redirectUri, clientId } = dto;
+    const client = await this.getClientByClientId(clientId, userId);
 
     return await client.update({
       name,
@@ -50,32 +53,32 @@ export class ClientsService {
   }
 
   async delete(dto: DeleteAppDto, userId: number) {
-    const { id } = dto;
+    const { clientId } = dto;
 
-    const client = await this.getClientById(id, userId);
+    const client = await this.getClientByClientId(clientId, userId);
     await client.destroy();
 
     return { deleted: true };
   }
 
   /* Internal */
-
-  async getClientById(id: number, userId: number) {
-    const client = await this.clientsRepository.findByPk(id);
+  async getClientByClientId(clientId: string, userId?: number) {
+    const client = await this.clientsRepository.findByPk(clientId);
     if (!client) throw new NotFoundException('client', CLIENT_NOT_FOUND);
-    if (client.userId !== userId) {
+    if (userId && client.userId !== userId) {
       throw new BadRequestException('client', CLIENT_NOT_AVAILABLE);
     }
 
     return client;
   }
 
-  async getClientByClientId(clientId: string) {
+  async getClientSecretByClientId(clientId: string) {
     const client = await this.clientsRepository.findOne({
       where: { clientId },
+      attributes: ['clientSecret'],
     });
     if (!client) throw new NotFoundException('client', CLIENT_NOT_FOUND);
 
-    return client;
+    return client.clientSecret;
   }
 }

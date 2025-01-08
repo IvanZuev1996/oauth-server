@@ -44,8 +44,8 @@ export class OAuthCodesModel extends Model<OAuthCodesModel> {
   redirectUri: string;
 
   @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.INTEGER))
-  scope: number[];
+  @Column(DataType.STRING)
+  scope: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)

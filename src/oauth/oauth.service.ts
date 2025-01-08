@@ -2,19 +2,32 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { Repository } from 'sequelize-typescript';
-import { ClientTokensModel } from './models/client-tokens.model';
+import { ClientRefreshTokensModel } from './models/client-refresh-tokens.model';
 import { ConsentsModel } from './models/consents.model';
-import { AuthorizeDto, ExchangeAuthCodeDto } from './dto';
-import { BadRequestException } from 'src/common/exceptions';
-import { ACCESS_DENIED, CODE_CHALLENGE_METHOD_INCORRECT } from 'src/constants';
+import { AuthorizeDto, ExchangeAuthCodeDto, RefreshOAuthTokenDto } from './dto';
+import {
+  BadRequestException,
+  UnauthorizedException,
+} from 'src/common/exceptions';
+import {
+  ACCESS_DENIED,
+  CODE_CHALLENGE_METHOD_INCORRECT,
+  OAUTH_CODE_EXPIRED,
+} from 'src/constants';
 import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
-import { addMinutes } from 'date-fns';
+import { addMinutes, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
 import crypto from 'crypto';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { OAuthTokenPayload } from './interfaces';
+import {
+  CreateAuthCodeAttributes,
+  CreateConsentAttributes,
+  CreateOAuthTokensAttributes,
+  DecodedOAuthTokenPayload,
+  OAuthTokenPayload,
+} from './interfaces';
+import { ScopesService } from 'src/scopes/scopes.service';
 
 @Injectable()
 export class OauthService {
@@ -22,27 +35,19 @@ export class OauthService {
     /* Models */
     @InjectModel(OAuthCodesModel)
     private oauthCodesRepository: Repository<OAuthCodesModel>,
-    @InjectModel(ClientTokensModel)
-    private tokensRepository: Repository<ClientTokensModel>,
+    @InjectModel(ClientRefreshTokensModel)
+    private refreshTokesRepository: Repository<ClientRefreshTokensModel>,
     @InjectModel(ConsentsModel)
     private consentsRepository: Repository<ConsentsModel>,
 
     /* Services */
     private readonly clientsService: ClientsService,
-    private readonly configService: ConfigService,
+    private readonly scopesService: ScopesService,
     private jwtService: JwtService,
   ) {}
 
   async authorize(dto: AuthorizeDto, userId: number) {
-    const {
-      clientId,
-      codeChallenge,
-      codeChallengeMethod,
-      redirectUri,
-      scope,
-      state,
-    } = dto;
-
+    const { clientId, codeChallengeMethod, redirectUri, scope, state } = dto;
     const client = await this.clientsService.getClientByClientId(clientId);
 
     if (codeChallengeMethod !== 'S256') {
@@ -59,23 +64,16 @@ export class OauthService {
     const expiresAt = addMinutes(new Date(), AUTH_CODE_TTL);
     const code = nanoid(AUTH_CODE_LENGTH);
 
-    await this.oauthCodesRepository.create({
-      userId,
-      clientId,
-      codeChallenge,
-      redirectUri: client.redirectUri,
-      scope,
-      state: state || null,
+    await this.saveAuthCode({
+      ...dto,
       code,
-      expiresAt,
-    });
-    await this.consentsRepository.create({
       userId,
-      clientId,
-      scope,
+      expiresAt,
+      state: state || null,
+      redirectUri: client.redirectUri,
     });
+    await this.saveConsent({ userId, clientId, scope });
 
-    console.log('CODE: ', code);
     const url = `${client.redirectUri}?code=${code}&state=${state}`;
     return { url };
   }
@@ -89,7 +87,15 @@ export class OauthService {
     });
     if (!oauthCode) throw new BadRequestException('code', ACCESS_DENIED);
 
-    this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
+    const isOauthCodeValid = isAfter(oauthCode.expiresAt, new Date());
+    if (!isOauthCodeValid) {
+      throw new BadRequestException('code', OAUTH_CODE_EXPIRED);
+    }
+
+    // TODO:
+    // this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
+    const activeToken = await this.getTokenByClientId(clientId);
+    if (activeToken) await activeToken.destroy();
     await oauthCode.destroy();
 
     const tokensPayload: OAuthTokenPayload = {
@@ -97,24 +103,169 @@ export class OauthService {
       clientName: client.name,
       userId: oauthCode.userId,
       scope: oauthCode.scope,
+      tokenId: '',
     };
-    const { access_token, refresh_token, type, ...tokensId } =
-      await this.generateTokens(tokensPayload, client.clientSecret);
 
-    const expiresAt = addMinutes(new Date(), 60);
-    await this.tokensRepository.create({
-      accessTokenId: tokensId.accessTokenId,
-      refreshTokenId: tokensId.refreshTokenId,
-      userId: tokensPayload.userId,
-      clientId: tokensPayload.clientId,
-      scope: tokensPayload.scope,
-      expiresAt,
-    });
+    const ttl = await this.calculateScopeTTL(tokensPayload.scope);
+    const { access_token, refresh_token, type, refreshTokenId } =
+      await this.generateTokens(tokensPayload, client.clientSecret, ttl);
+
+    await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId });
 
     return { access_token, refresh_token, type, scope: tokensPayload.scope };
   }
 
-  /* Internal */
+  async refreshOAuthToken(dto: RefreshOAuthTokenDto, clientId: string) {
+    const { refreshToken } = dto;
+    const client = await this.clientsService.getClientByClientId(clientId);
+    const tokenPayload = await this.verifyClientByRefreshToken(
+      refreshToken,
+      client.clientSecret,
+    );
+    if (!tokenPayload) throw new UnauthorizedException();
+
+    const activeToken = await this.getTokenByTokenId(tokenPayload.tokenId);
+    if (!activeToken) throw new UnauthorizedException();
+
+    await activeToken.destroy();
+
+    const { access_token, refresh_token, type, refreshTokenId } =
+      await this.generateTokens(
+        tokenPayload,
+        client.clientSecret,
+        tokenPayload.exp,
+      );
+
+    await this.saveToken({ ...tokenPayload, tokenId: refreshTokenId });
+
+    return { access_token, refresh_token, type };
+  }
+
+  async revokeToken(clientId: string) {
+    const activeToken = await this.getTokenByClientId(clientId);
+    if (!activeToken) throw new UnauthorizedException();
+    await activeToken.destroy();
+  }
+
+  // #region: GET */
+
+  private async getAuthCodeByClientId(clientId: string) {
+    return await this.oauthCodesRepository.findOne({
+      where: { clientId },
+    });
+  }
+
+  private async getTokenByClientId(clientId: string) {
+    return await this.refreshTokesRepository.findOne({
+      where: { clientId },
+    });
+  }
+
+  private async getTokenByTokenId(tokenId: string) {
+    return await this.refreshTokesRepository.findByPk(tokenId);
+  }
+
+  // #region: CREATE */
+
+  private async saveToken(payload: CreateOAuthTokensAttributes) {
+    const expiresAt = addMinutes(new Date(), 60);
+
+    const existToken = await this.getTokenByClientId(payload.clientId);
+    if (existToken) await existToken.destroy();
+
+    return await this.refreshTokesRepository.create({
+      tokenId: payload.tokenId,
+      userId: payload.userId,
+      clientId: payload.clientId,
+      scope: payload.scope,
+      expiresAt,
+    });
+  }
+
+  private async saveConsent(payload: CreateConsentAttributes) {
+    return await this.consentsRepository.create(payload);
+  }
+
+  private async saveAuthCode(payload: CreateAuthCodeAttributes) {
+    const existCode = await this.getAuthCodeByClientId(payload.clientId);
+    if (existCode) await existCode.destroy();
+    return await this.oauthCodesRepository.create(payload);
+  }
+
+  // #region: INTERNAL */
+
+  private async calculateScopeTTL(scope: string) {
+    const scopeKeys = scope.split(' ');
+    const scopes = await this.scopesService.getScopesByKeys(scopeKeys);
+    if (!scopes || !scopes.length) return -1;
+
+    let ttl = -1;
+    for await (const scope of scopes) {
+      if (ttl === -1) {
+        ttl = scope.ttl;
+        continue;
+      }
+      ttl = Math.min(ttl, scope.ttl);
+    }
+    return ttl;
+  }
+
+  private async generateTokens(
+    payload: OAuthTokenPayload,
+    secret: string,
+    ttl: number,
+  ) {
+    const refreshTokenId = nanoid();
+    const type = 'Bearer';
+
+    const access_token = await this.generateAccessToken(
+      { ...payload, tokenId: refreshTokenId },
+      secret,
+      ttl,
+    );
+    const refresh_token = await this.generateRefreshToken(
+      { ...payload, tokenId: refreshTokenId },
+      secret,
+      ttl,
+    );
+
+    return { type, access_token, refresh_token, refreshTokenId };
+  }
+
+  private async generateAccessToken(
+    payload: OAuthTokenPayload,
+    secret: string,
+    ttl: number,
+  ) {
+    const options = { secret, expiresIn: ttl };
+    return await this.jwtService.signAsync(payload, options);
+  }
+
+  private async generateRefreshToken(
+    payload: OAuthTokenPayload,
+    secret: string,
+    ttl: number,
+  ) {
+    const options = { secret, expiresIn: ttl };
+    return await this.jwtService.signAsync(payload, options);
+  }
+
+  private async verifyClientByRefreshToken(
+    oldRefreshToken: string,
+    secret: string,
+  ) {
+    try {
+      const payload = this.jwtService.verify<DecodedOAuthTokenPayload>(
+        oldRefreshToken,
+        { secret },
+      );
+      if (typeof payload === 'object' && 'clientId' in payload) return payload;
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   private validateCodeVerifier(codeVerifier: string, codeChallenge: string) {
     const hash = crypto.createHash('sha256');
     hash.update(codeVerifier);
@@ -125,40 +276,10 @@ export class OauthService {
     }
   }
 
-  private async generateTokens(payload: OAuthTokenPayload, secret: string) {
-    const refreshTokenId = nanoid();
-    const accessTokenId = nanoid();
-    const type = 'Bearer';
-
-    const access_token = await this.generateAccessToken(
-      { ...payload, tokenId: accessTokenId },
-      secret,
-    );
-    const refresh_token = await this.generateRefreshToken(
-      { ...payload, tokenId: refreshTokenId },
-      secret,
-    );
-
-    return { type, access_token, refresh_token, accessTokenId, refreshTokenId };
-  }
-
-  private async generateAccessToken(
-    payload: OAuthTokenPayload,
-    secret: string,
-  ) {
-    const expiresIn = await this.configService.get('ACCESS_TOKEN_LIFETIME');
-
-    const options = { secret, expiresIn };
-    return await this.jwtService.signAsync(payload, options);
-  }
-
-  private async generateRefreshToken(
-    payload: OAuthTokenPayload,
-    secret: string,
-  ) {
-    const expiresIn = await this.configService.get('REFRESH_TOKEN_LIFETIME');
-
-    const options = { secret, expiresIn };
-    return await this.jwtService.signAsync(payload, options);
+  async validateRefreshTokenByTokenId(tokenId: string) {
+    const token = await this.getTokenByTokenId(tokenId);
+    const isTokenValid = token && isAfter(token.expiresAt, new Date());
+    if (!isTokenValid) throw new UnauthorizedException();
+    return token;
   }
 }

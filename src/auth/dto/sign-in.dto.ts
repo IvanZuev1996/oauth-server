@@ -6,5 +6,5 @@ export class SignInDto extends PickType(SignUpDto, ['password'] as const) {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  readonly login_or_tg: string;
+  readonly loginOrTg: string;
 }

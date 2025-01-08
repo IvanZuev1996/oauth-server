@@ -2,27 +2,25 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { ClientsService } from 'src/clients/clients.service';
+import { OAUTH_METADATA, SCOPES_METADATA } from 'src/constants';
 
 @Injectable()
 export class OAuthAccessTokenGuard extends AuthGuard('oauth-jwt') {
-  constructor(
-    private reflector: Reflector,
-    readonly clientsService: ClientsService,
-  ) {
+  constructor(private reflector: Reflector) {
     super();
   }
 
   canActivate(context: ExecutionContext) {
-    const isPublic = this.reflector.getAllAndOverride('isPublic', [
+    const isOAuthRoute = this.reflector.getAllAndOverride(OAUTH_METADATA, [
       context.getHandler(),
       context.getClass(),
     ]);
+    const isHaveRequiredScopes = this.reflector.getAllAndOverride(
+      SCOPES_METADATA,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isPublic) return true;
-
-    // TODO:
-    // const client = this.clientsService;
+    if (!isOAuthRoute && !isHaveRequiredScopes) return true;
 
     return super.canActivate(context);
   }

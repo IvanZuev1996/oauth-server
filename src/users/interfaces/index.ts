@@ -11,6 +11,7 @@ export interface UserProfile {
   telegram: string;
   isActive: boolean;
   roleId: number;
+  name: string;
   createdAt: string;
   updatedAt: string;
 

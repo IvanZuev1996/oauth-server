@@ -1,17 +1,12 @@
 import { Repository } from 'sequelize-typescript';
-import * as argon from 'argon2';
 import { nanoid } from 'nanoid';
-
 import { Injectable } from '@nestjs/common';
-
 import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
 } from 'src/common/exceptions';
-
 import { JwtService } from '@nestjs/jwt';
-
 import { SignInDto, SignUpDto } from './dto';
 import { UsersService } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
@@ -22,7 +17,7 @@ import {
   TokensPayload,
 } from './interfaces';
 import { InjectModel } from '@nestjs/sequelize';
-import { UserRefreshTokenModel } from './models/user-tokens.model';
+import { UserRefreshTokenModel } from './models/user-refresh-tokens.model';
 import { RolesEnum } from 'src/configs/roles';
 import {
   USER_EMAIL_EXIST,
@@ -32,6 +27,7 @@ import {
 } from 'src/constants';
 import { Mode } from 'src/types';
 import { RolesService } from 'src/roles/roles.service';
+import * as argon from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -75,38 +71,38 @@ export class AuthService {
       telegram: tg.toLowerCase(),
       isActive: true,
     });
-    const user_id = newUser.id;
+    const userId = newUser.id;
 
     const { name: role } = await this.rolesService.getRoleById(roleId);
-    const payload = { user_id, login, role };
+    const payload = { userId, login, role };
     const tokensData = await this.generateTokens(payload);
 
-    const token_id = tokensData.refresh_token_id;
-    await this.saveRefreshToken({ token_id, user_id });
+    const tokenId = tokensData.refreshTokenId;
+    await this.saveRefreshToken({ tokenId, userId });
 
     const { type, access_token, refresh_token } = tokensData;
     return { type, access_token, refresh_token };
   }
 
   async signIn(dto: SignInDto) {
-    const { login_or_tg, password } = dto;
-    const user = await this.userService.getUserByLoginOrTelegram(login_or_tg);
+    const { loginOrTg, password } = dto;
+    const user = await this.userService.getUserByLoginOrTelegram(loginOrTg);
     if (!user) throw new BadRequestException('wrong', WRONG_SIGNIN_DATA);
 
     const isPwdMatch = await this.comparePassword(user.password, password);
     if (!isPwdMatch) throw new BadRequestException('wrong', WRONG_SIGNIN_DATA);
 
-    const user_id = user.id;
+    const userId = user.id;
     const { login } = user;
 
     const { name: role } = await this.rolesService.getRoleById(user.roleId);
-    const payload = { user_id, login, role };
+    const payload = { userId, login, role };
     const tokensData = await this.generateTokens(payload);
 
-    await this.userRefreshTokenRepository.destroy({ where: { user_id } });
+    await this.userRefreshTokenRepository.destroy({ where: { userId } });
 
-    const token_id = tokensData.refresh_token_id;
-    await this.saveRefreshToken({ token_id, user_id });
+    const tokenId = tokensData.refreshTokenId;
+    await this.saveRefreshToken({ tokenId, userId });
 
     const { type, access_token, refresh_token } = tokensData;
     return { type, access_token, refresh_token };
@@ -116,33 +112,33 @@ export class AuthService {
     const validToken = await this.verifyUserByRefreshToken(old_refresh_token);
     if (!validToken) throw new UnauthorizedException();
 
-    const { user_id } = validToken;
+    const { userId } = validToken;
 
     const activeToken = await this.userRefreshTokenRepository.findByPk(
-      validToken.token_id,
+      validToken.tokenId,
     );
     if (!activeToken) throw new UnauthorizedException();
 
-    const user = await this.userService.getUserById(user_id);
+    const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException();
 
     await activeToken.destroy();
 
     const { login } = user;
     const { name: role } = await this.rolesService.getRoleById(user.roleId);
-    const payload = { user_id, login, role };
+    const payload = { userId, login, role };
     const tokensData = await this.generateTokens(payload);
 
     const { type, access_token, refresh_token } = tokensData;
-    const token_id = tokensData.refresh_token_id;
+    const tokenId = tokensData.refreshTokenId;
 
-    await this.saveRefreshToken({ token_id, user_id });
+    await this.saveRefreshToken({ tokenId, userId });
 
     return { type, access_token, refresh_token };
   }
 
-  async logout(user_id: number) {
-    await this.userRefreshTokenRepository.destroy({ where: { user_id } });
+  async logout(userId: number) {
+    await this.userRefreshTokenRepository.destroy({ where: { userId } });
     return { is_logout: true };
   }
 
@@ -174,16 +170,21 @@ export class AuthService {
   }
 
   private async generateTokens(payload: TokensPayload) {
-    const refresh_token_id = nanoid();
+    const refreshTokenId = nanoid();
     const type = 'Bearer';
 
     const access_token = await this.generateAccessToken(payload);
     const refresh_token = await this.generateRefreshToken({
       ...payload,
-      token_id: refresh_token_id,
+      tokenId: refreshTokenId,
     });
 
-    return { type, access_token, refresh_token, refresh_token_id };
+    return {
+      type,
+      access_token,
+      refresh_token,
+      refreshTokenId,
+    };
   }
 
   private async generateAccessToken(payload: AccessToken) {

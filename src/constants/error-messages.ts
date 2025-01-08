@@ -25,6 +25,9 @@ export const CLIENT_NOT_AVAILABLE = 'Приложение не доступно'
 
 /* OAUTH */
 export const CODE_CHALLENGE_METHOD_INCORRECT = 'Поддерживается только S256';
+export const OAUTH_CODE_EXPIRED = 'Код устарел, запросите его снова';
+export const SERVICE_NOT_FOUND = 'Сервис не найден';
+export const SCOPE_NOT_FOUND = 'Такое разрешение не найдено';
 
 /* TELEGRAM */
 export const TG_CONFIRM_CODE = 'Код подтверждения - ';

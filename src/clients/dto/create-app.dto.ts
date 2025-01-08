@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAppDto {
   @ApiProperty()
@@ -13,14 +7,10 @@ export class CreateAppDto {
   @IsString()
   readonly name: string;
 
-  @ApiProperty({
-    isArray: true,
-    type: 'number',
-  })
+  @ApiProperty()
   @IsNotEmpty()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  readonly scope: number[];
+  @IsString()
+  readonly scope: string;
 
   @ApiProperty()
   @IsNotEmpty()

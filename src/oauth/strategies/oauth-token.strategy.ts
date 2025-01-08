@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { OAuthTokenPayload } from '../interfaces';
+import { DecodedOAuthTokenPayload, OAuthTokenPayload } from '../interfaces';
 import { ClientsService } from 'src/clients/clients.service';
+import { JwtService } from '@nestjs/jwt';
+import { OauthService } from '../oauth.service';
 
 @Injectable()
 export class OAuthAccessTokenStrategy extends PassportStrategy(
@@ -11,16 +12,38 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
   'oauth-jwt',
 ) {
   constructor(
-    private readonly configService: ConfigService,
     private readonly clientsService: ClientsService,
+    private readonly oauthService: OauthService,
+    private readonly jwtService: JwtService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'fewfew',
+      secretOrKeyProvider: async (
+        _: any,
+        token: string,
+        done: (...args: any[]) => void,
+      ) => {
+        try {
+          const jwtPayload: DecodedOAuthTokenPayload =
+            this.jwtService.decode(token);
+
+          const tokenId = jwtPayload.clientId;
+          await this.oauthService.validateRefreshTokenByTokenId(
+            jwtPayload.tokenId,
+          );
+
+          const clientSecret =
+            await this.clientsService.getClientSecretByClientId(tokenId);
+
+          return done(null, clientSecret);
+        } catch (error) {
+          return done(error, null);
+        }
+      },
     });
   }
 
-  validate(payload: OAuthTokenPayload) {
+  async validate(payload: OAuthTokenPayload) {
     return payload;
   }
 }

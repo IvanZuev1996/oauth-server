@@ -1,10 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-
-import { RolesEnum } from 'src/configs/roles';
 import { UsersService } from './users.service';
-
-const { ADMIN, EMPLOYEE, MANAGER } = RolesEnum;
+import { GetCurrentUserId, OAuth, Scopes } from 'src/common/decorators';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -12,9 +9,17 @@ const { ADMIN, EMPLOYEE, MANAGER } = RolesEnum;
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('me')
   @ApiOperation({ summary: 'get user info (ALL)' })
-  getMe() {
-    return 'Hello';
+  @Get('me')
+  getMe(@GetCurrentUserId() userId: number) {
+    return this.usersService.getMe(userId);
+  }
+
+  @OAuth()
+  @Scopes('service1:scope1')
+  @ApiOperation({ summary: 'test' })
+  @Get('test')
+  test() {
+    return 'Да, прошло!';
   }
 }

@@ -21,10 +21,10 @@ export class UserRefreshTokenModel extends Model<
   @PrimaryKey
   @Unique
   @Column(DataType.STRING)
-  readonly token_id: string;
+  readonly tokenId: string;
 
   @ForeignKey(() => UserModel)
   @AllowNull(false)
   @Column(DataType.INTEGER)
-  user_id: number;
+  userId: number;
 }

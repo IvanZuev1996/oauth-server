@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ACCESS_DENIED } from 'src/constants';
+import { ACCESS_DENIED, ROLES_METADATA } from 'src/constants';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -20,7 +20,7 @@ export class RoleGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.getAllAndOverride<string[]>('roles', [
+    const roles = this.reflector.getAllAndOverride<string[]>(ROLES_METADATA, [
       context.getHandler(),
       context.getClass(),
     ]);

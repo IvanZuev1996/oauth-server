@@ -4,7 +4,7 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from 'src/users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
-import { UserRefreshTokenModel } from './models/user-tokens.model';
+import { UserRefreshTokenModel } from './models/user-refresh-tokens.model';
 import { AccessTokenStrategy } from './strategies';
 import { RolesModule } from 'src/roles/roles.module';
 
