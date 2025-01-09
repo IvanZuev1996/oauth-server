@@ -18,6 +18,9 @@ import { OauthModule } from './oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
 import { ClientsModule } from './clients/clients.module';
 import { ScopesModule } from './scopes/scopes.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -31,6 +34,10 @@ import { ScopesModule } from './scopes/scopes.module';
       inject: [ConfigService],
       useFactory: (c: ConfigService) => sequelizeConfig(c),
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/api/uploads',
+    }),
     HttpModule,
     AuthModule,
     OauthModule,
@@ -38,6 +45,7 @@ import { ScopesModule } from './scopes/scopes.module';
     UsersModule,
     ClientsModule,
     ScopesModule,
+    UploadsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },

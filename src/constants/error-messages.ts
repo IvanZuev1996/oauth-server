@@ -34,3 +34,6 @@ export const TG_CONFIRM_CODE = 'Код подтверждения - ';
 export const TG_SEND_LOGIN = 'Ваш логин - ';
 export const TG_NOT_CONFIRMED = 'Телеграм не подтверждён';
 export const TG_ALREADY_EXIST = 'Телеграм уже занят';
+
+/* UPLOAD */
+export const UNSUPPORTED_FILE = 'Файл не поддерживается';
