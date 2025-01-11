@@ -26,7 +26,7 @@ export class ClientsController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'get user application by id' })
-  @Get(':id')
+  @Get(':clientId')
   getApplicationById(
     @Param() { clientId }: GetAppByIdDto,
     @GetCurrentUserId() userId: number,
