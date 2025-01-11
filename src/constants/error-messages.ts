@@ -37,3 +37,4 @@ export const TG_ALREADY_EXIST = 'Телеграм уже занят';
 
 /* UPLOAD */
 export const UNSUPPORTED_FILE = 'Файл не поддерживается';
+export const FILE_NOT_FOUND = 'Файл не найден';
