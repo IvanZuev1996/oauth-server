@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Repository } from 'sequelize-typescript';
 import { ScopeModel } from './models/scope.model';
-import { Op } from 'sequelize';
+import { Includeable, Op } from 'sequelize';
 import { CreateScopeDto, DeleteScopeDto } from './dto';
 import { ServiceModel } from './models/service.model';
 import { BadRequestException } from 'src/common/exceptions';
@@ -39,27 +39,31 @@ export class ScopesService {
   }
 
   async deleteScope(dto: DeleteScopeDto) {
-    const { scopeId } = dto;
-    const scope = await this.getScopeById(scopeId);
+    const { scopeKey } = dto;
+    const scope = await this.getScopeByKey(scopeKey);
     if (!scope) throw new BadRequestException('scope', SCOPE_NOT_FOUND);
 
     await scope.destroy();
     return { deleted: true };
   }
 
-  async getScopesByKeys(scopeKeys: string[]) {
+  async getScopesByKeys(scopeKeys: string[], includeServices?: boolean) {
+    const include: Includeable[] = [];
+    if (includeServices) include.push({ model: ServiceModel });
+
     return this.scopesRepository.findAll({
       where: {
         key: {
           [Op.in]: scopeKeys,
         },
       },
+      include,
     });
   }
 
   // #region: INTERNAL *//
 
-  private async getScopeById(id: number) {
-    return this.scopesRepository.findByPk(id);
+  async getScopeByKey(key: string) {
+    return this.scopesRepository.findByPk(key);
   }
 }

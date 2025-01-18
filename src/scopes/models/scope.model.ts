@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BelongsTo,
   Column,
   DataType,
   Default,
@@ -21,7 +22,7 @@ export class ScopeModel extends Model<ScopeModel> {
 
   @AllowNull(false)
   @ForeignKey(() => ServiceModel)
-  @Column(DataType.STRING)
+  @Column(DataType.INTEGER)
   readonly serviceId: number;
 
   @AllowNull(false)
@@ -41,4 +42,7 @@ export class ScopeModel extends Model<ScopeModel> {
   @Default(false)
   @Column(DataType.BOOLEAN)
   isTtlRefreshable: boolean;
+
+  @BelongsTo(() => ServiceModel)
+  service: ServiceModel;
 }

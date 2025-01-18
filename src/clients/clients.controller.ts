@@ -31,7 +31,7 @@ export class ClientsController {
     @Param() { clientId }: GetAppByIdDto,
     @GetCurrentUserId() userId: number,
   ) {
-    return this.clientsService.getClientByClientId(clientId, userId);
+    return this.clientsService.getClient(clientId, userId);
   }
 
   @ApiBearerAuth()

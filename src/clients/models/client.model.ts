@@ -41,8 +41,8 @@ export class ClientModel extends Model<ClientModel> {
   companyEmail: string;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
-  scope: string;
+  @Column(DataType.ARRAY(DataType.STRING))
+  scopes: string[];
 
   @AllowNull(true)
   @Default(null)
