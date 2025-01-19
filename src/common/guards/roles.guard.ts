@@ -5,11 +5,17 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { TokensPayload } from 'src/auth/interfaces';
 import { ACCESS_DENIED, ROLES_METADATA } from 'src/constants';
+import { RoleModel } from 'src/roles/models/role.model';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private usersService: UsersService,
+  ) {}
 
   matchRoles(roles: string[], userRole: string) {
     if (roles.some((role) => role === userRole)) {
@@ -19,7 +25,7 @@ export class RoleGuard implements CanActivate {
     throw new ForbiddenException({ message: ACCESS_DENIED });
   }
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.getAllAndOverride<string[]>(ROLES_METADATA, [
       context.getHandler(),
       context.getClass(),
@@ -27,8 +33,16 @@ export class RoleGuard implements CanActivate {
 
     if (!roles) return true;
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const user = request.user as TokensPayload;
 
-    return this.matchRoles(roles, user.role);
+    const userData = await this.usersService.getUserById(user.userId, {
+      model: RoleModel,
+    });
+
+    if (!userData) {
+      throw new ForbiddenException({ message: ACCESS_DENIED });
+    }
+
+    return this.matchRoles(roles, userData.role.name);
   }
 }

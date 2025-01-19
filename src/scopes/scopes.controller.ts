@@ -1,18 +1,27 @@
-import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ScopesService } from './scopes.service';
-import { Public } from 'src/common/decorators';
+import { Roles } from 'src/common/decorators';
 import { ApiOperation } from '@nestjs/swagger';
-import { CreateScopeDto, DeleteScopeDto } from './dto';
+import { CreateScopeDto, DeleteScopeDto, GetScopesDto } from './dto';
+import { RolesEnum } from 'src/configs/roles';
 
-@Public()
+@Roles(RolesEnum.ADMIN)
 @Controller('scopes')
 export class ScopesController {
   constructor(private readonly scopesService: ScopesService) {}
 
   @Get()
-  @ApiOperation({ summary: 'get all scopes' })
-  async getScopes() {
-    return this.scopesService.getAllScopes();
+  @ApiOperation({ summary: 'get scopes list' })
+  async getScopes(@Query() dto: GetScopesDto) {
+    return this.scopesService.getScopesList(dto);
   }
 
   @Post()

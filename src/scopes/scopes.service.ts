@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Repository } from 'sequelize-typescript';
 import { ScopeModel } from './models/scope.model';
-import { Includeable, Op } from 'sequelize';
-import { CreateScopeDto, DeleteScopeDto } from './dto';
+import { Includeable, Op, WhereOptions } from 'sequelize';
+import { CreateScopeDto, DeleteScopeDto, GetScopesDto } from './dto';
 import { ServiceModel } from './models/service.model';
 import { BadRequestException } from 'src/common/exceptions';
 import { SCOPE_NOT_FOUND, SERVICE_NOT_FOUND } from 'src/constants';
@@ -19,8 +19,25 @@ export class ScopesService {
     private servicesRepository: Repository<ServiceModel>,
   ) {}
 
-  async getAllScopes() {
-    return this.scopesRepository.findAll();
+  async getScopesList(dto: GetScopesDto) {
+    if (!dto.query) return this.scopesRepository.findAndCountAll();
+
+    const where: WhereOptions<ScopeModel> = {
+      [Op.or]: [
+        {
+          key: {
+            [Op.iLike]: `%${dto.query}%`,
+          },
+        },
+        {
+          title: {
+            [Op.iLike]: `%${dto.query}%`,
+          },
+        },
+      ],
+    };
+
+    return this.scopesRepository.findAndCountAll({ where });
   }
 
   async createScope(dto: CreateScopeDto) {

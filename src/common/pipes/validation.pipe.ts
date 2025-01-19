@@ -30,7 +30,8 @@ export class ValidationPipe implements PipeTransform<any> {
       errors.forEach((err) => {
         if (err.constraints) {
           messages.push({
-            [err.property]: Object.values(err.constraints).join(', '),
+            property: err.property,
+            message: Object.values(err.constraints).join(', '),
           });
         }
 
@@ -38,7 +39,8 @@ export class ValidationPipe implements PipeTransform<any> {
           err.children.forEach((err) => {
             if (err.constraints) {
               messages.push({
-                [err.property]: Object.values(err.constraints).join(', '),
+                property: err.property,
+                message: Object.values(err.constraints).join(', '),
               });
             }
           });
