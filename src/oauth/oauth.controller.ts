@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Redirect } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { OauthService } from './oauth.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthorizeDto, ExchangeAuthCodeDto, RefreshOAuthTokenDto } from './dto';
@@ -16,7 +16,6 @@ export class OauthController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'authorize user on application after agreement' })
-  @Redirect()
   @Get('authorize')
   async authorize(
     @Query() dto: AuthorizeDto,

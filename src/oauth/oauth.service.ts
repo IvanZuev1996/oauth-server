@@ -13,6 +13,7 @@ import {
   ACCESS_DENIED,
   CODE_CHALLENGE_METHOD_INCORRECT,
   OAUTH_CODE_EXPIRED,
+  RESPONSE_TYPE_INCORRECT,
 } from 'src/constants';
 import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
@@ -28,6 +29,7 @@ import {
   OAuthTokenPayload,
 } from './interfaces';
 import { ScopesService } from 'src/scopes/scopes.service';
+import { Response } from 'express';
 
 @Injectable()
 export class OauthService {
@@ -47,43 +49,60 @@ export class OauthService {
   ) {}
 
   async authorize(dto: AuthorizeDto, userId: number) {
-    const { clientId, codeChallengeMethod, redirectUri, scope, state } = dto;
-    const client = await this.clientsService.getClientByClientId(clientId);
+    const {
+      client_id,
+      redirect_uri,
+      code_challenge_method,
+      code_challenge,
+      response_type,
+      scope,
+      state,
+    } = dto;
+    const client = await this.clientsService.getClientByClientId(client_id);
 
-    if (codeChallengeMethod !== 'S256') {
+    if (code_challenge_method !== 'S256') {
       throw new BadRequestException(
         'codeChallengeMethod',
         CODE_CHALLENGE_METHOD_INCORRECT,
       );
     }
 
-    if (redirectUri && redirectUri !== client.redirectUri) {
+    if (response_type !== 'code') {
+      throw new BadRequestException('responseType', RESPONSE_TYPE_INCORRECT);
+    }
+
+    if (redirect_uri && redirect_uri !== client.redirectUri) {
       throw new BadRequestException('redirectUri', ACCESS_DENIED);
     }
 
     const expiresAt = addMinutes(new Date(), AUTH_CODE_TTL);
     const code = nanoid(AUTH_CODE_LENGTH);
+    const scopes = scope || client.scopes.join(' ');
 
     await this.saveAuthCode({
-      ...dto,
       code,
       userId,
       expiresAt,
+      scope: scopes,
+      clientId: client_id,
+      codeChallenge: code_challenge,
       state: state || null,
       redirectUri: client.redirectUri,
     });
-    await this.saveConsent({ userId, clientId, scope });
+    await this.saveConsent({ userId, clientId: client_id, scope: scopes });
 
-    const url = `${client.redirectUri}?code=${code}&state=${state}`;
+    let url = `${client.redirectUri}?code=${code}`;
+    if (state) url += '&state=' + state;
+
     return { url };
   }
 
   async exchangeAuthCode(dto: ExchangeAuthCodeDto) {
-    const { clientId, code, codeVerifier } = dto;
+    const { client_id, code, code_verifier } = dto;
 
-    const client = await this.clientsService.getClientByClientId(clientId);
+    const client = await this.clientsService.getClientByClientId(client_id);
     const oauthCode = await this.oauthCodesRepository.findOne({
-      where: { code, clientId },
+      where: { code, clientId: client_id },
     });
     if (!oauthCode) throw new BadRequestException('code', ACCESS_DENIED);
 
@@ -93,13 +112,13 @@ export class OauthService {
     }
 
     // TODO:
-    // this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
-    const activeToken = await this.getTokenByClientId(clientId);
+    // this.validateCodeVerifier(code_verifier, oauthCode.codeChallenge);
+    const activeToken = await this.getTokenByClientId(client_id);
     if (activeToken) await activeToken.destroy();
     await oauthCode.destroy();
 
     const tokensPayload: OAuthTokenPayload = {
-      clientId,
+      clientId: client_id,
       clientName: client.name,
       userId: oauthCode.userId,
       scope: oauthCode.scope,
@@ -116,10 +135,9 @@ export class OauthService {
   }
 
   async refreshOAuthToken(dto: RefreshOAuthTokenDto, clientId: string) {
-    const { refreshToken } = dto;
     const client = await this.clientsService.getClientByClientId(clientId);
     const tokenPayload = await this.verifyClientByRefreshToken(
-      refreshToken,
+      dto.refresh_token,
       client.clientSecret,
     );
     if (!tokenPayload) throw new UnauthorizedException();

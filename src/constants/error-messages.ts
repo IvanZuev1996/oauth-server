@@ -25,6 +25,8 @@ export const CLIENT_NOT_AVAILABLE = 'Приложение не доступно'
 
 /* OAUTH */
 export const CODE_CHALLENGE_METHOD_INCORRECT = 'Поддерживается только S256';
+export const RESPONSE_TYPE_INCORRECT =
+  'Тип возвращаемого значения должен быть code';
 export const OAUTH_CODE_EXPIRED = 'Код устарел, запросите его снова';
 export const SERVICE_NOT_FOUND = 'Сервис не найден';
 export const SCOPE_NOT_FOUND = 'Такое разрешение не найдено';
