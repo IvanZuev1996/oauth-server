@@ -29,7 +29,6 @@ import {
   OAuthTokenPayload,
 } from './interfaces';
 import { ScopesService } from 'src/scopes/scopes.service';
-import { Response } from 'express';
 
 @Injectable()
 export class OauthService {
