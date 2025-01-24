@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { Repository } from 'sequelize-typescript';
@@ -29,6 +29,8 @@ import {
   OAuthTokenPayload,
 } from './interfaces';
 import { ScopesService } from 'src/scopes/scopes.service';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @Injectable()
 export class OauthService {
@@ -40,6 +42,9 @@ export class OauthService {
     private refreshTokesRepository: Repository<ClientRefreshTokensModel>,
     @InjectModel(ConsentsModel)
     private consentsRepository: Repository<ConsentsModel>,
+
+    /* Logger */
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
 
     /* Services */
     private readonly clientsService: ClientsService,
@@ -60,6 +65,10 @@ export class OauthService {
     const client = await this.clientsService.getClientByClientId(client_id);
 
     if (code_challenge_method !== 'S256') {
+      this.logger.warn(
+        `OAuth Aurhorize: Not valid code challenge method (${code_challenge_method}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
       throw new BadRequestException(
         'codeChallengeMethod',
         CODE_CHALLENGE_METHOD_INCORRECT,
@@ -67,10 +76,18 @@ export class OauthService {
     }
 
     if (response_type !== 'code') {
+      this.logger.warn(
+        `OAuth Aurhorize: Reponse type is not valid (${response_type}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
       throw new BadRequestException('responseType', RESPONSE_TYPE_INCORRECT);
     }
 
     if (redirect_uri && redirect_uri !== client.redirectUri) {
+      this.logger.warn(
+        `OAuth Aurhorize: Redirect uri is not matched (${redirect_uri}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
       throw new BadRequestException('redirectUri', ACCESS_DENIED);
     }
 
@@ -90,6 +107,10 @@ export class OauthService {
     });
     await this.saveConsent({ userId, clientId: client_id, scope: scopes });
 
+    this.logger.info(
+      `Success OAuth Authorize. UserId: ${userId} on clientId: ${client_id}`,
+    );
+
     let url = `${client.redirectUri}?code=${code}`;
     if (state) url += '&state=' + state;
 
@@ -107,6 +128,7 @@ export class OauthService {
 
     const isOauthCodeValid = isAfter(oauthCode.expiresAt, new Date());
     if (!isOauthCodeValid) {
+      this.logger.error(`Exchange OAuth code expired. ClientId: ${client_id}`);
       throw new BadRequestException('code', OAUTH_CODE_EXPIRED);
     }
 
@@ -129,6 +151,7 @@ export class OauthService {
       await this.generateTokens(tokensPayload, client.clientSecret, ttl);
 
     await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId }, ttl);
+    this.logger.info(`Success exchange OAuth code. ClientId: ${client_id}`);
 
     return { access_token, refresh_token, type, scope: tokensPayload.scope };
   }
@@ -157,6 +180,8 @@ export class OauthService {
       { ...tokenPayload, tokenId: refreshTokenId },
       tokenPayload.exp,
     );
+
+    this.logger.info(`Success refresh OAuth token. ClientId: ${clientId}`);
 
     return { access_token, refresh_token, type };
   }
@@ -292,6 +317,7 @@ export class OauthService {
     const hashedCodeVerifier = hash.digest('base64url');
 
     if (hashedCodeVerifier !== codeChallenge) {
+      this.logger.error(`Code verifier is not valid`);
       throw new BadRequestException('codeVerifier', ACCESS_DENIED);
     }
   }

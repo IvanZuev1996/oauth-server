@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ClientModel } from './models/client.model';
 import { Repository } from 'sequelize-typescript';
@@ -8,12 +8,20 @@ import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { CLIENT_NOT_AVAILABLE, CLIENT_NOT_FOUND } from 'src/constants';
 import { ScopesService } from 'src/scopes/scopes.service';
 import { Scope } from 'src/scopes/interfaces';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @Injectable()
 export class ClientsService {
   constructor(
+    /* Models */
     @InjectModel(ClientModel)
     private clientsRepository: Repository<ClientModel>,
+
+    /* Logger */
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+
+    /* Services */
     private readonly scopesService: ScopesService,
   ) {}
 
@@ -61,6 +69,8 @@ export class ClientsService {
     const clientId = nanoid(32);
     const clientSecret = nanoid(32);
 
+    this.logger.info(`New OAuth client created: ${clientId}`);
+
     return await this.clientsRepository.create({
       name,
       scopes,
@@ -91,6 +101,8 @@ export class ClientsService {
 
     const client = await this.getClientByClientId(clientId, userId);
     await client.destroy();
+
+    this.logger.info(`OAuth client deleted: ${clientId}`);
 
     return { deleted: true };
   }

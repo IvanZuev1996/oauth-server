@@ -3,8 +3,10 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from './common/pipes';
 import { swaggerConfig } from './configs/swagger';
+import { Logger } from '@nestjs/common';
 
 const port = process.env.PORT;
+const isDev = process.env.NODE_ENV === 'development';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,17 +21,16 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('/docs', app, document, {
-    swaggerOptions: {
-      apisSorter: 'alpha',
-      tagsSorter: 'alpha',
-      operationsSorter: 'alpha',
-    },
-  });
+  if (isDev) {
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('/docs', app, document);
+  }
 
   await app.listen(port, () => {
-    console.log(`-> OAuth_2_server running on port: ${port}`);
+    Logger.log(`Server is running on http://localhost:${port}`);
+    if (isDev) {
+      Logger.log(`Swagger is running on http://localhost:${port}/docs`);
+    }
   });
 }
 
