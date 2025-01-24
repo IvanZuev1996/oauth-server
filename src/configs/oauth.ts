@@ -1,7 +1,7 @@
 /**
- * @description Время жизни кода авторизации - 10 минут
+ * @description Время жизни кода авторизации - 5 минут
  */
-export const AUTH_CODE_TTL = 10;
+export const AUTH_CODE_TTL = 5;
 /**
  * @description Длина кода авторизации - 64 символа
  */

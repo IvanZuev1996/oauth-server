@@ -17,7 +17,7 @@ import {
 } from 'src/constants';
 import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
-import { addMinutes, isAfter } from 'date-fns';
+import { addMinutes, addSeconds, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
 import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -128,7 +128,7 @@ export class OauthService {
     const { access_token, refresh_token, type, refreshTokenId } =
       await this.generateTokens(tokensPayload, client.clientSecret, ttl);
 
-    await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId });
+    await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId }, ttl);
 
     return { access_token, refresh_token, type, scope: tokensPayload.scope };
   }
@@ -153,7 +153,10 @@ export class OauthService {
         tokenPayload.exp,
       );
 
-    await this.saveToken({ ...tokenPayload, tokenId: refreshTokenId });
+    await this.saveToken(
+      { ...tokenPayload, tokenId: refreshTokenId },
+      tokenPayload.exp,
+    );
 
     return { access_token, refresh_token, type };
   }
@@ -184,8 +187,8 @@ export class OauthService {
 
   // #region: CREATE */
 
-  private async saveToken(payload: CreateOAuthTokensAttributes) {
-    const expiresAt = addMinutes(new Date(), 60);
+  private async saveToken(payload: CreateOAuthTokensAttributes, ttl: number) {
+    const expiresAt = addSeconds(new Date(), ttl);
 
     const existToken = await this.getTokenByClientId(payload.clientId);
     if (existToken) await existToken.destroy();
