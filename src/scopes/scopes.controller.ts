@@ -13,7 +13,6 @@ import { ApiOperation } from '@nestjs/swagger';
 import { CreateScopeDto, DeleteScopeDto, GetScopesDto } from './dto';
 import { RolesEnum } from 'src/configs/roles';
 
-@Roles(RolesEnum.ADMIN)
 @Controller('scopes')
 export class ScopesController {
   constructor(private readonly scopesService: ScopesService) {}
@@ -25,12 +24,14 @@ export class ScopesController {
   }
 
   @Post()
+  @Roles(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'create scope' })
   async createScope(@Body() dto: CreateScopeDto) {
     return this.scopesService.createScope(dto);
   }
 
   @Delete()
+  @Roles(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'delete scope' })
   async deleteScope(@Body() dto: DeleteScopeDto) {
     return this.scopesService.deleteScope(dto);
