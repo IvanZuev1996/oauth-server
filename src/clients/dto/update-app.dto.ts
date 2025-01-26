@@ -8,6 +8,7 @@ export class UpdateAppDto extends PickType(CreateAppDto, [
   'name',
   'redirectUri',
   'scopes',
+  'options',
 ]) {
   @ApiProperty()
   @IsString()

@@ -10,6 +10,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { UserModel } from 'src/users/models/user.model';
+import { ClientScopesOptions } from '../interfaces';
 
 @Table({ tableName: 'clients' })
 export class ClientModel extends Model<ClientModel> {
@@ -48,4 +49,9 @@ export class ClientModel extends Model<ClientModel> {
   @Default(null)
   @Column(DataType.STRING)
   img: string;
+
+  @AllowNull(true)
+  @Default(null)
+  @Column(DataType.JSONB)
+  scopesOptions: ClientScopesOptions;
 }

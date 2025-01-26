@@ -64,7 +64,7 @@ export class ClientsService {
   }
 
   async create(dto: CreateAppDto, userId: number) {
-    const { name, scopes, img, companyEmail, redirectUri } = dto;
+    const { name, scopes, img, companyEmail, redirectUri, options } = dto;
 
     const clientId = nanoid(32);
     const clientSecret = nanoid(32);
@@ -80,11 +80,13 @@ export class ClientsService {
       clientId,
       clientSecret,
       userId,
+      scopesOptions: options,
     });
   }
 
   async update(dto: UpdateAppDto, userId: number) {
-    const { name, scopes, img, companyEmail, redirectUri, clientId } = dto;
+    const { name, scopes, img, companyEmail, redirectUri, clientId, options } =
+      dto;
     const client = await this.getClientByClientId(clientId, userId);
 
     return await client.update({
@@ -93,6 +95,7 @@ export class ClientsService {
       img,
       companyEmail,
       redirectUri,
+      scopesOptions: options,
     });
   }
 

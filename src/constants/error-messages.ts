@@ -40,3 +40,18 @@ export const TG_ALREADY_EXIST = 'Телеграм уже занят';
 /* UPLOAD */
 export const UNSUPPORTED_FILE = 'Файл не поддерживается';
 export const FILE_NOT_FOUND = 'Файл не найден';
+
+/* SCOPES */
+export const TIME_OF_DAY_BLOCKED = 'У приложения нет доступа к API в это время';
+export const DAY_OF_WEEK_BLOCKED = 'У приложения нет доступа к API в этот день';
+export const DAY_OF_MONTH_BLOCKED =
+  'У приложения нет доступа к API в этот день';
+export const REQUESTS_PER_MINUTE_BLOCKED = 'Превышен лимит запросов';
+export const DEPENDENT_SCOPES_BLOCKED = 'Отсутствуют необходимые доступы';
+export const IP_WHITELIST_BLOCKED = 'Не валидный IP-адрес';
+export const IP_BLACKLIST_BLOCKED = 'Не валидный IP-адрес';
+export const USER_ROLES_BLOCKED = 'У пользователя нет доступа к этому API';
+export const PROJECTS_BLOCKED = 'У пользователя нет доступа к этому API';
+export const GEO_ALLOWED_COUNTRIES_BLOCKED =
+  'Доступ из текущей страны запрещен';
+export const GEO_DENIED_COUNTRIES_BLOCKED = 'Доступ из текущей страны запрещен';

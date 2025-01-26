@@ -38,6 +38,8 @@ export class ScopesGuard implements CanActivate {
     const clientScopeStr: string = request.user?.scope || '';
     const clientScopes = clientScopeStr.split(' ') || [];
 
-    return this.matchScopes(requiredScopes, clientScopes);
+    /* Check if client has required scopes for the route */
+    const isScopesMatched = this.matchScopes(requiredScopes, clientScopes);
+    if (isScopesMatched) return true;
   }
 }
