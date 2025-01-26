@@ -21,6 +21,7 @@ import { ScopesModule } from './scopes/scopes.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { join } from 'path';
     ClientsModule,
     ScopesModule,
     UploadsModule,
+    CacheModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },
