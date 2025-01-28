@@ -59,12 +59,12 @@ export class ScopesGuard implements CanActivate {
     if (!client) throw new ForbiddenException({ message: ACCESS_DENIED });
 
     /* Check scopes options for the client */
-    await this.scopesValidator.validate(
-      client.scopesOptions,
-      clientScopes,
+    await this.scopesValidator.validate({
       clientId,
+      options: client.scopesOptions,
+      clientScopes,
       request,
-    );
+    });
 
     return true;
   }

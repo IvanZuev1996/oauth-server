@@ -7,7 +7,9 @@ import {
   GetCurrentUserId,
   OAuth,
   Public,
+  Roles,
 } from 'src/common/decorators';
+import { RolesEnum } from 'src/configs/roles';
 
 @ApiTags('OAuth')
 @Controller('oauth')
@@ -43,6 +45,7 @@ export class OauthController {
   }
 
   @ApiBearerAuth()
+  @Roles(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'revoke access and refresh token' })
   @Post('token/revoke')
   async revokeTokens(@GetCurrentClientId() clientId: string) {

@@ -5,6 +5,8 @@ import { DecodedOAuthTokenPayload, OAuthTokenPayload } from '../interfaces';
 import { ClientsService } from 'src/clients/clients.service';
 import { JwtService } from '@nestjs/jwt';
 import { OauthService } from '../oauth.service';
+import { ClientStatus } from 'src/clients/interfaces';
+import { UnauthorizedException } from 'src/common/exceptions';
 
 @Injectable()
 export class OAuthAccessTokenStrategy extends PassportStrategy(
@@ -27,15 +29,18 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
           const jwtPayload: DecodedOAuthTokenPayload =
             this.jwtService.decode(token);
 
-          const tokenId = jwtPayload.clientId;
+          const clientId = jwtPayload.tokenId;
           await this.oauthService.validateRefreshTokenByTokenId(
             jwtPayload.tokenId,
           );
 
-          const clientSecret =
-            await this.clientsService.getClientSecretByClientId(tokenId);
+          const client =
+            await this.clientsService.getClientByClientId(clientId);
+          if (client.status !== ClientStatus.ACTIVE) {
+            throw new UnauthorizedException();
+          }
 
-          return done(null, clientSecret);
+          return done(null, client.clientSecret);
         } catch (error) {
           return done(error, null);
         }

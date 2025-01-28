@@ -1,6 +1,7 @@
 import {
   AllowNull,
   AutoIncrement,
+  BelongsTo,
   Column,
   DataType,
   ForeignKey,
@@ -9,6 +10,7 @@ import {
   Table,
   Unique,
 } from 'sequelize-typescript';
+import { ClientModel } from 'src/clients/models/client.model';
 import { UserModel } from 'src/users/models/user.model';
 
 @Table({
@@ -26,6 +28,7 @@ export class ConsentsModel extends Model<ConsentsModel> {
   @Column(DataType.INTEGER)
   userId: number;
 
+  @ForeignKey(() => ClientModel)
   @AllowNull(false)
   @Column(DataType.STRING)
   clientId: string;
@@ -33,4 +36,12 @@ export class ConsentsModel extends Model<ConsentsModel> {
   @AllowNull(false)
   @Column(DataType.STRING)
   scope: string;
+
+  /* Relationships */
+
+  @BelongsTo(() => UserModel)
+  user: UserModel;
+
+  @BelongsTo(() => ClientModel)
+  client: ClientModel;
 }

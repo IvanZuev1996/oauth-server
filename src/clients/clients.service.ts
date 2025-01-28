@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ClientModel } from './models/client.model';
 import { Repository } from 'sequelize-typescript';
-import { CreateAppDto, DeleteAppDto, UpdateAppDto } from './dto';
+import {
+  ChangeAppStatusDto,
+  CreateAppDto,
+  DeleteAppDto,
+  UpdateAppDto,
+} from './dto';
 import { nanoid } from 'nanoid';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { CLIENT_NOT_AVAILABLE, CLIENT_NOT_FOUND } from 'src/constants';
@@ -10,6 +15,7 @@ import { ScopesService } from 'src/scopes/scopes.service';
 import { Scope } from 'src/scopes/interfaces';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { ClientStatus } from './interfaces';
 
 @Injectable()
 export class ClientsService {
@@ -28,7 +34,7 @@ export class ClientsService {
   async getUserApplications(userId: number) {
     return await this.clientsRepository.findAll({
       where: { userId },
-      attributes: ['clientId', 'name', 'createdAt', 'img'],
+      attributes: ['clientId', 'name', 'createdAt', 'img', 'status'],
     });
   }
 
@@ -60,11 +66,19 @@ export class ClientsService {
       };
     }
 
-    return { ...client.toJSON(), scopes: scopesDetails };
+    if (client.status === ClientStatus.ACTIVE) {
+      return { ...client.toJSON(), scopes: scopesDetails };
+    }
+
+    return {
+      ...client.toJSON(),
+      scopes: scopesDetails,
+      clientSecret: undefined,
+    };
   }
 
   async create(dto: CreateAppDto, userId: number) {
-    const { name, scopes, img, companyEmail, redirectUri, options } = dto;
+    const { name, scopes, img, companyEmail, redirectUri } = dto;
 
     const clientId = nanoid(32);
     const clientSecret = nanoid(32);
@@ -80,13 +94,11 @@ export class ClientsService {
       clientId,
       clientSecret,
       userId,
-      scopesOptions: options,
     });
   }
 
   async update(dto: UpdateAppDto, userId: number) {
-    const { name, scopes, img, companyEmail, redirectUri, clientId, options } =
-      dto;
+    const { name, scopes, img, companyEmail, redirectUri, clientId } = dto;
     const client = await this.getClientByClientId(clientId, userId);
 
     return await client.update({
@@ -95,7 +107,23 @@ export class ClientsService {
       img,
       companyEmail,
       redirectUri,
-      scopesOptions: options,
+    });
+  }
+
+  async changeAppStatus(dto: ChangeAppStatusDto) {
+    const { clientId } = dto;
+    const client = await this.getClientByClientId(clientId);
+    if (!client) throw new BadRequestException('client', CLIENT_NOT_FOUND);
+
+    if (dto.status === ClientStatus.ACTIVE) {
+      return await client.update({
+        status: ClientStatus.ACTIVE,
+        scopesOptions: dto.options,
+      });
+    }
+
+    return await client.update({
+      status: ClientStatus.REJECTED,
     });
   }
 

@@ -1,6 +1,15 @@
 import { FromToOptions } from 'src/types';
 
+export enum ClientStatus {
+  ACTIVE = 'active',
+  REJECTED = 'rejected',
+  PENDING = 'pending',
+}
+
 export interface ClientScopesOptions {
+  /* Только рабочие дни */
+  workingDaysOnly?: boolean;
+
   /* Время дня в которое будет разрешен доступ */
   timeOfDay?: FromToOptions;
 
@@ -21,12 +30,6 @@ export interface ClientScopesOptions {
 
   /* Список запрещённых IP-адресов */
   ipBlacklist?: string[];
-
-  /* Список ролей разрешённых пользователей */
-  userRoles?: number[];
-
-  /* Список проектов, к которым должен иметь доступ юзер */
-  projects?: string[];
 
   /* Список разрешённых / запрещённых стран */
   geo?: {

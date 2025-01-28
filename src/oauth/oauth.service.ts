@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { Repository } from 'sequelize-typescript';
@@ -11,6 +11,7 @@ import {
 } from 'src/common/exceptions';
 import {
   ACCESS_DENIED,
+  CLIENT_NOT_FOUND,
   CODE_CHALLENGE_METHOD_INCORRECT,
   OAUTH_CODE_EXPIRED,
   RESPONSE_TYPE_INCORRECT,
@@ -31,6 +32,7 @@ import {
 import { ScopesService } from 'src/scopes/scopes.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { ClientStatus } from 'src/clients/interfaces';
 
 @Injectable()
 export class OauthService {
@@ -63,6 +65,14 @@ export class OauthService {
       state,
     } = dto;
     const client = await this.clientsService.getClientByClientId(client_id);
+
+    if (client.status !== ClientStatus.ACTIVE) {
+      this.logger.warn(
+        `OAuth Aurhorize: Client is not active. 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
+      throw new BadGatewayException('client', CLIENT_NOT_FOUND);
+    }
 
     if (code_challenge_method !== 'S256') {
       this.logger.warn(
@@ -121,6 +131,10 @@ export class OauthService {
     const { client_id, code, code_verifier } = dto;
 
     const client = await this.clientsService.getClientByClientId(client_id);
+    if (client.status !== ClientStatus.ACTIVE) {
+      throw new BadRequestException('client', CLIENT_NOT_FOUND);
+    }
+
     const oauthCode = await this.oauthCodesRepository.findOne({
       where: { code, clientId: client_id },
     });

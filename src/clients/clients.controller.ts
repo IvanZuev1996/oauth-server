@@ -9,8 +9,15 @@ import {
 } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateAppDto, DeleteAppDto, GetAppByIdDto, UpdateAppDto } from './dto';
-import { GetCurrentUserId } from 'src/common/decorators';
+import {
+  ChangeAppStatusDto,
+  CreateAppDto,
+  DeleteAppDto,
+  GetAppByIdDto,
+  UpdateAppDto,
+} from './dto';
+import { GetCurrentUserId, Roles } from 'src/common/decorators';
+import { RolesEnum } from 'src/configs/roles';
 
 @ApiTags('Clients (apps)')
 @Controller('clients')
@@ -52,6 +59,14 @@ export class ClientsController {
     @GetCurrentUserId() userId: number,
   ) {
     return this.clientsService.update(dto, userId);
+  }
+
+  @ApiBearerAuth()
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'change application status' })
+  @Patch()
+  changeApplicationStatus(@Body() dto: ChangeAppStatusDto) {
+    return this.clientsService.changeAppStatus(dto);
   }
 
   @ApiBearerAuth()
