@@ -73,7 +73,7 @@ export class ClientsService {
     return {
       ...client.toJSON(),
       scopes: scopesDetails,
-      clientSecret: undefined,
+      clientSecret: null,
     };
   }
 
