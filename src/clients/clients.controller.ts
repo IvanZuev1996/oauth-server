@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ import {
   CreateAppDto,
   DeleteAppDto,
   GetAppByIdDto,
+  GetAppsDto,
   UpdateAppDto,
 } from './dto';
 import { GetCurrentUserId, Roles } from 'src/common/decorators';
@@ -27,8 +29,11 @@ export class ClientsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'get user applications' })
   @Get()
-  getUserApplications(@GetCurrentUserId() userId: number) {
-    return this.clientsService.getUserApplications(userId);
+  getUserApplications(
+    @Query() dto: GetAppsDto,
+    @GetCurrentUserId() userId: number,
+  ) {
+    return this.clientsService.getUserApplications(dto, userId);
   }
 
   @ApiBearerAuth()

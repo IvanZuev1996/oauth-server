@@ -6,6 +6,7 @@ import {
   ChangeAppStatusDto,
   CreateAppDto,
   DeleteAppDto,
+  GetAppsDto,
   UpdateAppDto,
 } from './dto';
 import { nanoid } from 'nanoid';
@@ -16,6 +17,7 @@ import { Scope } from 'src/scopes/interfaces';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { ClientStatus } from './interfaces';
+import { WhereOptions } from 'sequelize';
 
 @Injectable()
 export class ClientsService {
@@ -31,9 +33,11 @@ export class ClientsService {
     private readonly scopesService: ScopesService,
   ) {}
 
-  async getUserApplications(userId: number) {
+  async getUserApplications(dto: GetAppsDto, userId: number) {
+    const where: WhereOptions<ClientModel> = { userId };
+    if (dto.status) where.status = dto.status;
     return await this.clientsRepository.findAll({
-      where: { userId },
+      where,
       attributes: ['clientId', 'name', 'createdAt', 'img', 'status'],
     });
   }
