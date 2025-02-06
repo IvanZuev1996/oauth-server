@@ -3,6 +3,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  Default,
   ForeignKey,
   Model,
   PrimaryKey,
@@ -34,6 +35,11 @@ export class ClientRefreshTokensModel extends Model<ClientRefreshTokensModel> {
   @AllowNull(false)
   @Column(DataType.STRING)
   scope: string;
+
+  @AllowNull(false)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isRevoked: boolean;
 
   @AllowNull(false)
   @Column(DataType.DATE)

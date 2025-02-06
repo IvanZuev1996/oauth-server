@@ -30,6 +30,7 @@ export const RESPONSE_TYPE_INCORRECT =
 export const OAUTH_CODE_EXPIRED = 'Код устарел, запросите его снова';
 export const SERVICE_NOT_FOUND = 'Сервис не найден';
 export const SCOPE_NOT_FOUND = 'Такое разрешение не найдено';
+export const TOKEN_NOT_FOUND = 'Такой токен найден';
 
 /* TELEGRAM */
 export const TG_CONFIRM_CODE = 'Код подтверждения - ';

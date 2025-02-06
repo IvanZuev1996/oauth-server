@@ -16,15 +16,11 @@ import {
   DeleteAppDto,
   GetAppByIdDto,
   GetAppsDto,
+  RevokeTokenDto,
   UpdateAppDto,
 } from './dto';
-import {
-  GetCurrentUserId,
-  GetCurrentUserRole,
-  Roles,
-} from 'src/common/decorators';
+import { GetCurrentUserId, Roles } from 'src/common/decorators';
 import { RolesEnum } from 'src/configs/roles';
-import { UserRole } from 'src/users/interfaces';
 
 @ApiTags('Clients (apps)')
 @Controller('clients')
@@ -42,6 +38,14 @@ export class ClientsController {
   }
 
   @ApiBearerAuth()
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'get client refresh tokens list' })
+  @Get('tokens')
+  async getTokensList() {
+    return this.clientsService.getClientTokensList();
+  }
+
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'get user application by id' })
   @Get(':clientId')
   getApplicationById(
@@ -49,6 +53,14 @@ export class ClientsController {
     @GetCurrentUserId() userId: number,
   ) {
     return this.clientsService.getClient(clientId, userId);
+  }
+
+  @ApiBearerAuth()
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'revoke client refresh token' })
+  @Patch('token/revoke')
+  async revokeClientToken(@Body() dto: RevokeTokenDto) {
+    return this.clientsService.revokeClientToken(dto);
   }
 
   @ApiBearerAuth()

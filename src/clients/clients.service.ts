@@ -7,18 +7,24 @@ import {
   CreateAppDto,
   DeleteAppDto,
   GetAppsDto,
+  RevokeTokenDto,
   UpdateAppDto,
 } from './dto';
 import { nanoid } from 'nanoid';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
-import { CLIENT_NOT_AVAILABLE, CLIENT_NOT_FOUND } from 'src/constants';
+import {
+  CLIENT_NOT_AVAILABLE,
+  CLIENT_NOT_FOUND,
+  TOKEN_NOT_FOUND,
+} from 'src/constants';
 import { ScopesService } from 'src/scopes/scopes.service';
 import { Scope } from 'src/scopes/interfaces';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { ClientStatus } from './interfaces';
 import { WhereOptions } from 'sequelize';
-import { RolesEnum } from 'src/configs/roles';
+import { ClientRefreshTokensModel } from 'src/oauth/models/client-refresh-tokens.model';
+import { UserModel } from 'src/users/models/user.model';
 
 @Injectable()
 export class ClientsService {
@@ -26,6 +32,8 @@ export class ClientsService {
     /* Models */
     @InjectModel(ClientModel)
     private clientsRepository: Repository<ClientModel>,
+    @InjectModel(ClientRefreshTokensModel)
+    private refreshTokensRepo: Repository<ClientRefreshTokensModel>,
 
     /* Logger */
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -80,6 +88,26 @@ export class ClientsService {
       scopes: scopesDetails,
       clientSecret: null,
     };
+  }
+
+  async getClientTokensList() {
+    return this.refreshTokensRepo.findAndCountAll({
+      include: [{ model: ClientModel }, { model: UserModel }],
+    });
+  }
+
+  async revokeClientToken(dto: RevokeTokenDto) {
+    const { clientId, tokenId } = dto;
+    const token = await this.refreshTokensRepo.findOne({
+      where: { clientId, tokenId },
+    });
+    if (!token) throw new BadRequestException('token', TOKEN_NOT_FOUND);
+
+    await token.update({
+      isRevoked: true,
+    });
+
+    return { isRevoked: true };
   }
 
   async create(dto: CreateAppDto, userId: number) {
