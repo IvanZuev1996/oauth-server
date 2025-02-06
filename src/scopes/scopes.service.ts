@@ -3,11 +3,17 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Repository } from 'sequelize-typescript';
 import { ScopeModel } from './models/scope.model';
 import { Includeable, Op, WhereOptions } from 'sequelize';
-import { CreateScopeDto, DeleteScopeDto, GetScopesDto } from './dto';
+import {
+  ChangeScopeStatusDto,
+  CreateScopeDto,
+  DeleteScopeDto,
+  GetScopesDto,
+} from './dto';
 import { ServiceModel } from './models/service.model';
 import { BadRequestException } from 'src/common/exceptions';
 import { SCOPE_NOT_FOUND, SERVICE_NOT_FOUND } from 'src/constants';
 import { MIN_SCOPE_TTL } from 'src/configs/oauth';
+import { ClientModel } from 'src/clients/models/client.model';
 
 @Injectable()
 export class ScopesService {
@@ -17,10 +23,34 @@ export class ScopesService {
     private scopesRepository: Repository<ScopeModel>,
     @InjectModel(ServiceModel)
     private servicesRepository: Repository<ServiceModel>,
+    @InjectModel(ClientModel)
+    private clientsRepository: Repository<ClientModel>,
   ) {}
 
+  async getScope(scopeKey: string) {
+    const scope = await this.scopesRepository.findByPk(scopeKey, {
+      include: {
+        model: ServiceModel,
+      },
+    });
+
+    if (!scope) throw new BadRequestException('scope', SCOPE_NOT_FOUND);
+
+    const clientsCount = await this.clientsRepository.count({
+      where: { scopes: { [Op.contains]: [scopeKey] } },
+    });
+
+    return {
+      ...scope.toJSON(),
+      clientsCount,
+    };
+  }
+
   async getScopesList(dto: GetScopesDto) {
-    if (!dto.query) return this.scopesRepository.findAndCountAll();
+    const attributes: string[] = ['key', 'title', 'ttl', 'status'];
+    if (!dto.query) {
+      return this.scopesRepository.findAndCountAll({ attributes });
+    }
 
     const where: WhereOptions<ScopeModel> = {
       [Op.or]: [
@@ -37,7 +67,10 @@ export class ScopesService {
       ],
     };
 
-    return this.scopesRepository.findAndCountAll({ where });
+    return this.scopesRepository.findAndCountAll({
+      where,
+      attributes,
+    });
   }
 
   async createScope(dto: CreateScopeDto) {
@@ -62,6 +95,15 @@ export class ScopesService {
 
     await scope.destroy();
     return { deleted: true };
+  }
+
+  async changeScopeStatus(dto: ChangeScopeStatusDto) {
+    const { scopeKey, status } = dto;
+    const scope = await this.getScopeByKey(scopeKey);
+    if (!scope) throw new BadRequestException('scope', SCOPE_NOT_FOUND);
+
+    await scope.update({ status });
+    return { changed: true };
   }
 
   async getScopesByKeys(scopeKeys: string[], includeServices?: boolean) {

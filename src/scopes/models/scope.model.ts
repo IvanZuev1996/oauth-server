@@ -11,6 +11,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { ServiceModel } from './service.model';
+import { ScopeStatus } from '../interfaces';
 
 @Table({ tableName: 'scopes' })
 export class ScopeModel extends Model<ScopeModel> {
@@ -42,6 +43,11 @@ export class ScopeModel extends Model<ScopeModel> {
   @Default(false)
   @Column(DataType.BOOLEAN)
   isTtlRefreshable: boolean;
+
+  @AllowNull(false)
+  @Default(ScopeStatus.ACTIVE)
+  @Column(DataType.ENUM(...Object.values(ScopeStatus)))
+  status: ScopeStatus;
 
   @BelongsTo(() => ServiceModel)
   service: ServiceModel;

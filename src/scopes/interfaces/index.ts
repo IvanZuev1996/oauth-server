@@ -8,3 +8,8 @@ export type Scope = {
     };
   };
 };
+
+export enum ScopeStatus {
+  ACTIVE = 'active',
+  REVOKED = 'revoked',
+}

@@ -9,6 +9,8 @@ import { CacheService } from 'src/cache/cache.service';
 import { ACCESS_DENIED, OAUTH_METADATA, SCOPES_METADATA } from 'src/constants';
 import { ScopesValidator } from './scope-validator';
 import { ClientsService } from 'src/clients/clients.service';
+import { ScopesService } from 'src/scopes/scopes.service';
+import { ScopeStatus } from 'src/scopes/interfaces';
 
 @Injectable()
 export class ScopesGuard implements CanActivate {
@@ -18,6 +20,7 @@ export class ScopesGuard implements CanActivate {
     private reflector: Reflector,
     private readonly cacheService: CacheService,
     private readonly clientsService: ClientsService,
+    private readonly scopesService: ScopesService,
   ) {
     this.scopesValidator = new ScopesValidator(this.cacheService);
   }
@@ -29,7 +32,20 @@ export class ScopesGuard implements CanActivate {
     if (!isClientHasRequiredScopes) {
       throw new ForbiddenException({ message: ACCESS_DENIED });
     }
-    return true;
+  }
+
+  async validateRevokedScopes(requiredScopes: string[]) {
+    const scopes = await this.scopesService.getScopesByKeys(requiredScopes);
+    if (!scopes.length) {
+      throw new ForbiddenException({ message: ACCESS_DENIED });
+    }
+
+    const isSomeScopeRevoked = scopes.some(
+      (scope) => scope.status === ScopeStatus.REVOKED,
+    );
+    if (isSomeScopeRevoked) {
+      throw new ForbiddenException({ message: ACCESS_DENIED });
+    }
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -52,8 +68,10 @@ export class ScopesGuard implements CanActivate {
     const clientScopes = clientScopeStr.split(' ') || [];
 
     /* Check if client has required scopes for the route */
-    const isScopesMatched = this.matchScopes(requiredScopes, clientScopes);
-    if (isScopesMatched) return true;
+    this.matchScopes(requiredScopes, clientScopes);
+
+    /* Check revoked scopes */
+    this.validateRevokedScopes(requiredScopes);
 
     const client = await this.clientsService.getClientByClientId(clientId);
     if (!client) throw new ForbiddenException({ message: ACCESS_DENIED });

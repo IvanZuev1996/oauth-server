@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -10,7 +11,13 @@ import {
 import { ScopesService } from './scopes.service';
 import { Roles } from 'src/common/decorators';
 import { ApiOperation } from '@nestjs/swagger';
-import { CreateScopeDto, DeleteScopeDto, GetScopesDto } from './dto';
+import {
+  ChangeScopeStatusDto,
+  CreateScopeDto,
+  DeleteScopeDto,
+  GetScopeDto,
+  GetScopesDto,
+} from './dto';
 import { RolesEnum } from 'src/configs/roles';
 
 @Controller('scopes')
@@ -23,11 +30,24 @@ export class ScopesController {
     return this.scopesService.getScopesList(dto);
   }
 
+  @Get(':scopeKey')
+  @ApiOperation({ summary: 'get scopes list' })
+  async getScopeDetails(@Param() dto: GetScopeDto) {
+    return this.scopesService.getScope(dto.scopeKey);
+  }
+
   @Post()
   @Roles(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'create scope' })
   async createScope(@Body() dto: CreateScopeDto) {
     return this.scopesService.createScope(dto);
+  }
+
+  @Patch('status')
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'revoke scope' })
+  async revokeScope(@Body() dto: ChangeScopeStatusDto) {
+    return this.scopesService.changeScopeStatus(dto);
   }
 
   @Delete()
