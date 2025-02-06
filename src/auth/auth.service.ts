@@ -61,7 +61,7 @@ export class AuthService {
 
     const password = await this.hashPassword(dto.password);
     const { id: roleId } = await this.rolesService.getRoleByName(
-      RolesEnum.EMPLOYEE,
+      RolesEnum.USER,
     );
 
     const newUser = await this.userService.create({
