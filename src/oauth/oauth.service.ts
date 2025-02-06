@@ -66,9 +66,9 @@ export class OauthService {
     } = dto;
     const client = await this.clientsService.getClientByClientId(client_id);
 
-    if (client.status !== ClientStatus.ACTIVE) {
+    if (client.status !== ClientStatus.ACTIVE || client.isBanned) {
       this.logger.warn(
-        `OAuth Aurhorize: Client is not active. 
+        `OAuth Aurhorize: Client is not active or banned. 
          UserId: ${userId} on clientId: ${client_id}`,
       );
       throw new BadGatewayException('client', CLIENT_NOT_FOUND);
@@ -131,7 +131,7 @@ export class OauthService {
     const { client_id, code, code_verifier } = dto;
 
     const client = await this.clientsService.getClientByClientId(client_id);
-    if (client.status !== ClientStatus.ACTIVE) {
+    if (client.status !== ClientStatus.ACTIVE || client.isBanned) {
       throw new BadRequestException('client', CLIENT_NOT_FOUND);
     }
 

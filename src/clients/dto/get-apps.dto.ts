@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBooleanString,
-  IsEnum,
-  IsIn,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 import { ClientStatus } from '../interfaces';
 
 export class GetAppsDto {

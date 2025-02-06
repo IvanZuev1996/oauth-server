@@ -11,6 +11,7 @@ import {
 import { ClientsService } from './clients.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
+  BanAppDto,
   ChangeAppStatusDto,
   CreateAppDto,
   DeleteAppDto,
@@ -19,8 +20,13 @@ import {
   RevokeTokenDto,
   UpdateAppDto,
 } from './dto';
-import { GetCurrentUserId, Roles } from 'src/common/decorators';
+import {
+  GetCurrentUserId,
+  GetCurrentUserRole,
+  Roles,
+} from 'src/common/decorators';
 import { RolesEnum } from 'src/configs/roles';
+import { UserRole } from 'src/users/interfaces';
 
 @ApiTags('Clients (apps)')
 @Controller('clients')
@@ -33,8 +39,9 @@ export class ClientsController {
   getUserApplications(
     @Query() dto: GetAppsDto,
     @GetCurrentUserId() userId: number,
+    @GetCurrentUserRole() role: UserRole,
   ) {
-    return this.clientsService.getUserApplications(dto, userId);
+    return this.clientsService.getUserApplications(dto, userId, role.name);
   }
 
   @ApiBearerAuth()
@@ -89,6 +96,14 @@ export class ClientsController {
   @Patch('status')
   changeApplicationStatus(@Body() dto: ChangeAppStatusDto) {
     return this.clientsService.changeAppStatus(dto);
+  }
+
+  @ApiBearerAuth()
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'ban or unban application' })
+  @Patch('ban')
+  banApplication(@Body() dto: BanAppDto) {
+    return this.clientsService.banApp(dto);
   }
 
   @ApiBearerAuth()

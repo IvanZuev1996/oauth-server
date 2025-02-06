@@ -23,7 +23,7 @@ export class ClientModel extends Model<ClientModel> {
   @AllowNull(false)
   @ForeignKey(() => UserModel)
   @Column(DataType.INTEGER)
-  readonly userId: number;
+  userId: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -54,6 +54,11 @@ export class ClientModel extends Model<ClientModel> {
   @Default(null)
   @Column(DataType.JSONB)
   scopesOptions: ClientScopesOptions;
+
+  @AllowNull(true)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isBanned: boolean;
 
   @AllowNull(false)
   @Default(ClientStatus.PENDING)

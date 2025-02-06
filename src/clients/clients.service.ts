@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { ClientModel } from './models/client.model';
 import { Repository } from 'sequelize-typescript';
 import {
+  BanAppDto,
   ChangeAppStatusDto,
   CreateAppDto,
   DeleteAppDto,
@@ -25,6 +26,7 @@ import { ClientStatus } from './interfaces';
 import { WhereOptions } from 'sequelize';
 import { ClientRefreshTokensModel } from 'src/oauth/models/client-refresh-tokens.model';
 import { UserModel } from 'src/users/models/user.model';
+import { RolesEnum } from 'src/configs/roles';
 
 @Injectable()
 export class ClientsService {
@@ -42,12 +44,20 @@ export class ClientsService {
     private readonly scopesService: ScopesService,
   ) {}
 
-  async getUserApplications(dto: GetAppsDto, userId: number) {
-    const where: WhereOptions<ClientModel> = { userId };
+  async getUserApplications(dto: GetAppsDto, userId: number, role: RolesEnum) {
+    const where: WhereOptions<ClientModel> = {};
+    if (role !== RolesEnum.ADMIN) where.userId = userId;
     if (dto.status) where.status = dto.status;
     return await this.clientsRepository.findAll({
       where,
-      attributes: ['clientId', 'name', 'createdAt', 'img', 'status'],
+      attributes: [
+        'clientId',
+        'name',
+        'createdAt',
+        'img',
+        'status',
+        'isBanned',
+      ],
     });
   }
 
@@ -158,6 +168,17 @@ export class ClientsService {
     return await client.update({
       status: ClientStatus.REJECTED,
     });
+  }
+
+  async banApp(dto: BanAppDto) {
+    const { isBanned, clientId } = dto;
+    const client = await this.getClientByClientId(clientId);
+
+    await client.update({
+      isBanned,
+    });
+
+    return { isBanned };
   }
 
   async delete(dto: DeleteAppDto, userId: number) {

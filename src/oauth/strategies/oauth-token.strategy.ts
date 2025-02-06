@@ -36,7 +36,7 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
 
           const client =
             await this.clientsService.getClientByClientId(clientId);
-          if (client.status !== ClientStatus.ACTIVE) {
+          if (client.status !== ClientStatus.ACTIVE || client.isBanned) {
             throw new UnauthorizedException();
           }
 
