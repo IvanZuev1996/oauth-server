@@ -18,6 +18,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { ClientStatus } from './interfaces';
 import { WhereOptions } from 'sequelize';
+import { RolesEnum } from 'src/configs/roles';
 
 @Injectable()
 export class ClientsService {

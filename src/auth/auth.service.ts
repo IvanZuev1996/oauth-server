@@ -74,7 +74,11 @@ export class AuthService {
     const userId = newUser.id;
 
     const { name: role } = await this.rolesService.getRoleById(roleId);
-    const payload = { userId, login, role };
+    const payload: TokensPayload = {
+      userId,
+      login,
+      role: { id: roleId, name: role },
+    };
     const tokensData = await this.generateTokens(payload);
 
     const tokenId = tokensData.refreshTokenId;
@@ -96,7 +100,11 @@ export class AuthService {
     const { login } = user;
 
     const { name: role } = await this.rolesService.getRoleById(user.roleId);
-    const payload = { userId, login, role };
+    const payload: TokensPayload = {
+      userId,
+      login,
+      role: { id: user.roleId, name: role },
+    };
     const tokensData = await this.generateTokens(payload);
 
     await this.userRefreshTokenRepository.destroy({ where: { userId } });
@@ -126,7 +134,11 @@ export class AuthService {
 
     const { login } = user;
     const { name: role } = await this.rolesService.getRoleById(user.roleId);
-    const payload = { userId, login, role };
+    const payload: TokensPayload = {
+      userId,
+      login,
+      role: { id: user.roleId, name: role },
+    };
     const tokensData = await this.generateTokens(payload);
 
     const { type, access_token, refresh_token } = tokensData;

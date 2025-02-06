@@ -18,8 +18,13 @@ import {
   GetAppsDto,
   UpdateAppDto,
 } from './dto';
-import { GetCurrentUserId, Roles } from 'src/common/decorators';
+import {
+  GetCurrentUserId,
+  GetCurrentUserRole,
+  Roles,
+} from 'src/common/decorators';
 import { RolesEnum } from 'src/configs/roles';
+import { UserRole } from 'src/users/interfaces';
 
 @ApiTags('Clients (apps)')
 @Controller('clients')
@@ -69,7 +74,7 @@ export class ClientsController {
   @ApiBearerAuth()
   @Roles(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'change application status' })
-  @Patch()
+  @Patch('status')
   changeApplicationStatus(@Body() dto: ChangeAppStatusDto) {
     return this.clientsService.changeAppStatus(dto);
   }

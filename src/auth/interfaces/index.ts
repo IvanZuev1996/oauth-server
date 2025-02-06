@@ -1,5 +1,4 @@
-import { RolesEnum } from 'src/configs/roles';
-import { UserProfile } from 'src/users/interfaces';
+import { UserProfile, UserRole } from 'src/users/interfaces';
 
 export interface TokensCreationAttributes {
   tokenId: string;
@@ -7,7 +6,7 @@ export interface TokensCreationAttributes {
 }
 export interface AccessToken extends Pick<UserProfile, 'login'> {
   userId: number;
-  role: RolesEnum;
+  role: UserRole;
 }
 
 export interface RefreshToken extends AccessToken {
