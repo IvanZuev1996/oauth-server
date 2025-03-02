@@ -20,7 +20,7 @@ import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
 import { addMinutes, addSeconds, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import {
   CreateAuthCodeAttributes,
@@ -146,8 +146,7 @@ export class OauthService {
       throw new BadRequestException('code', OAUTH_CODE_EXPIRED);
     }
 
-    // TODO:
-    // this.validateCodeVerifier(code_verifier, oauthCode.codeChallenge);
+    this.validateCodeVerifier(code_verifier, oauthCode.codeChallenge);
     const activeToken = await this.getTokenByClientId(client_id);
     if (activeToken) await activeToken.destroy();
     await oauthCode.destroy();
