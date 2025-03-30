@@ -29,7 +29,7 @@ export class OAuthAccessTokenStrategy extends PassportStrategy(
           const jwtPayload: DecodedOAuthTokenPayload =
             this.jwtService.decode(token);
 
-          const clientId = jwtPayload.tokenId;
+          const clientId = jwtPayload.clientId;
           await this.oauthService.validateRefreshTokenByTokenId(
             jwtPayload.tokenId,
           );
