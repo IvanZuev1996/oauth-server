@@ -23,6 +23,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CacheModule } from './cache/cache.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { ProxyGatewayModule } from './proxy-gateway/proxy-gateway.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ProxyModule } from './proxy/proxy.module';
     UploadsModule,
     CacheModule,
     ProxyModule,
+    ProxyGatewayModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },

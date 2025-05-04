@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
 import { ProxyService } from './proxy.service';
 import { CreateProxyRouteDto } from './dto/create-proxy-route.dto';

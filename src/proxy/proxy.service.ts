@@ -15,6 +15,7 @@ import {
 import { SetProxyRouteScopesDto } from './dto';
 import { ScopesService } from 'src/scopes/scopes.service';
 import { BadRequestException, ConflictException } from 'src/common/exceptions';
+import { RestMethods } from 'src/types';
 
 @Injectable()
 export class ProxyService {
@@ -98,5 +99,23 @@ export class ProxyService {
 
     const exists = await this.proxyRoutesRepo.findOne({ where });
     if (exists) throw new ConflictException('route', PROXY_ROUTE_EXIST);
+  }
+
+  async getProxyRouteById(id: number) {
+    const route = await this.proxyRoutesRepo.findByPk(id);
+    if (!route) throw new BadRequestException('route', PROXY_ROUTE_NOT_FOUND);
+    return route;
+  }
+
+  async getProxyRouteScopes(routeId: number) {
+    return await this.proxyScopesRepo.findAll({ where: { routeId } });
+  }
+
+  async getProxyRouteByPath(path: string, method: RestMethods) {
+    const route = await this.proxyRoutesRepo.findOne({
+      where: { externalPath: path, method },
+    });
+    if (!route) throw new BadRequestException('route', PROXY_ROUTE_NOT_FOUND);
+    return route;
   }
 }

@@ -13,5 +13,6 @@ import { ScopesModule } from 'src/scopes/scopes.module';
     SequelizeModule.forFeature([ProxyRouteScopeModel, ProxyRouteModel]),
     ScopesModule,
   ],
+  exports: [ProxyService],
 })
 export class ProxyModule {}
