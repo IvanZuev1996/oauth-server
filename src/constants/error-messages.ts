@@ -56,3 +56,7 @@ export const PROJECTS_BLOCKED = 'У пользователя нет доступ
 export const GEO_ALLOWED_COUNTRIES_BLOCKED =
   'Доступ из текущей страны запрещен';
 export const GEO_DENIED_COUNTRIES_BLOCKED = 'Доступ из текущей страны запрещен';
+
+/* PROXY */
+export const PROXY_ROUTE_NOT_FOUND = 'Маршрут не найден';
+export const PROXY_ROUTE_EXIST = 'Маршрут с таким именем уже существует';

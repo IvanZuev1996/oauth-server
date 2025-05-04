@@ -22,6 +22,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CacheModule } from './cache/cache.module';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CacheModule } from './cache/cache.module';
     ScopesModule,
     UploadsModule,
     CacheModule,
+    ProxyModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: UserAccessTokenGuard },
