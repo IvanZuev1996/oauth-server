@@ -3,13 +3,12 @@ import {
   IsArray,
   IsIn,
   IsNotEmpty,
+  IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { RestMethods } from 'src/types';
 
-export class ProxyRouteDto {
+export class CreateProxyRouteDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -25,12 +24,10 @@ export class ProxyRouteDto {
   @IsNotEmpty()
   @IsString()
   readonly externalPath: string;
-}
 
-export class CreateProxyRouteDto {
-  @ApiProperty({ type: [ProxyRouteDto] })
+  @ApiProperty()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ProxyRouteDto)
-  readonly routes: ProxyRouteDto[];
+  @IsString({ each: true })
+  @IsOptional()
+  readonly scopes?: string[];
 }

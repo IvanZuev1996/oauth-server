@@ -31,10 +31,10 @@ export class ProxyController {
 
   @ApiBearerAuth()
   @Roles(RolesEnum.ADMIN)
-  @ApiOperation({ summary: 'create proxy routes' })
+  @ApiOperation({ summary: 'create proxy route' })
   @Post()
-  createProxyRoutes(@Body() dto: CreateProxyRouteDto) {
-    return this.proxyRoutesService.createProxyRoutes(dto);
+  createProxyRoute(@Body() dto: CreateProxyRouteDto) {
+    return this.proxyRoutesService.createProxyRoute(dto);
   }
 
   @ApiBearerAuth()
@@ -58,6 +58,6 @@ export class ProxyController {
   @ApiOperation({ summary: 'delete proxy route' })
   @Delete(':id')
   deleteProxyRoute(@Param() { id }: DeleteProxyRouteDto) {
-    return this.proxyRoutesService.deleteProxyRoute(id);
+    return this.proxyRoutesService.deleteProxyRoute(+id);
   }
 }

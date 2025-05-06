@@ -59,4 +59,4 @@ export const GEO_DENIED_COUNTRIES_BLOCKED = 'Доступ из текущей с
 
 /* PROXY */
 export const PROXY_ROUTE_NOT_FOUND = 'Маршрут не найден';
-export const PROXY_ROUTE_EXIST = 'Маршрут с таким именем уже существует';
+export const PROXY_ROUTE_EXIST = 'Такой маршрут уже существует';

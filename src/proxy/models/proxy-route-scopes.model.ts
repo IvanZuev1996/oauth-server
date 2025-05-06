@@ -33,9 +33,9 @@ export class ProxyRouteScopeModel extends Model<ProxyRouteScopeModel> {
   @Column(DataType.STRING)
   scopeKey: string;
 
-  @BelongsTo(() => ProxyRouteModel)
+  @BelongsTo(() => ProxyRouteModel, { onDelete: 'CASCADE' })
   route: ProxyRouteModel;
 
-  @BelongsTo(() => ScopeModel)
+  @BelongsTo(() => ScopeModel, { onDelete: 'CASCADE' })
   scope: ScopeModel;
 }

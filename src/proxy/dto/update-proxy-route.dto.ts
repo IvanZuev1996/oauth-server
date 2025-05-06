@@ -1,11 +1,12 @@
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
-import { ProxyRouteDto } from './create-proxy-route.dto';
-import { IsIn, IsNotEmpty, IsNumber } from 'class-validator';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { CreateProxyRouteDto } from './create-proxy-route.dto';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
-export class UpdateProxyRouteDto extends PickType(ProxyRouteDto, [
+export class UpdateProxyRouteDto extends PickType(CreateProxyRouteDto, [
   'externalPath',
   'method',
   'name',
+  'scopes',
 ]) {
   @ApiProperty()
   @IsNotEmpty()

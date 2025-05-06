@@ -35,5 +35,5 @@ export class ProxyRouteModel extends Model<ProxyRouteModel> {
   externalPath: string;
 
   @HasMany(() => ProxyRouteScopeModel)
-  routeScopes: ProxyRouteScopeModel[];
+  scopes: ProxyRouteScopeModel[];
 }

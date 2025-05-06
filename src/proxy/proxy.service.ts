@@ -34,25 +34,52 @@ export class ProxyService {
   ) {}
 
   async getProxyRoutes() {
-    return await this.proxyRoutesRepo.findAndCountAll();
+    const routes = await this.proxyRoutesRepo.findAndCountAll({
+      include: {
+        model: ProxyRouteScopeModel,
+        attributes: ['scopeKey'],
+      },
+    });
+
+    return {
+      count: routes.count,
+      rows: routes.rows.map((r) => ({
+        ...r.toJSON(),
+        scopes: r.scopes.map((s) => s.scopeKey),
+      })),
+    };
   }
 
-  async createProxyRoutes(dto: CreateProxyRouteDto) {
-    for (const route of dto.routes) {
-      this.checkRouteExists(route.method, route.externalPath);
-      this.checkRouteName(route.name);
+  async createProxyRoute(dto: CreateProxyRouteDto) {
+    await this.checkRouteExists(dto.method, dto.externalPath);
+    await this.checkRouteName(dto.name);
+
+    const { scopes, ...payload } = dto;
+    const proxyRoute = await this.proxyRoutesRepo.create(payload);
+
+    if (dto.scopes) {
+      await this.setProxyRouteScopes({
+        routeId: proxyRoute.id,
+        scopes: dto.scopes,
+      });
     }
 
-    const proxyRoutes = await this.proxyRoutesRepo.bulkCreate(dto.routes);
-    return proxyRoutes;
+    return proxyRoute;
   }
 
   async updateProxyRoute(dto: UpdateProxyRouteDto) {
     const route = await this.proxyRoutesRepo.findByPk(dto.routeId);
     if (!route) throw new BadRequestException('route', PROXY_ROUTE_NOT_FOUND);
 
-    this.checkRouteExists(dto.method, dto.externalPath, route.id);
-    this.checkRouteName(dto.name, route.id);
+    await this.checkRouteExists(dto.method, dto.externalPath, route.id);
+    await this.checkRouteName(dto.name, route.id);
+
+    if (dto.scopes) {
+      await this.setProxyRouteScopes({
+        routeId: route.id,
+        scopes: dto.scopes,
+      });
+    }
 
     route.name = dto.name;
     route.method = dto.method;
@@ -90,7 +117,7 @@ export class ProxyService {
     if (excludeId) where.id = { [Op.ne]: excludeId };
 
     const exists = await this.proxyRoutesRepo.findOne({ where });
-    if (exists) throw new ConflictException('route', PROXY_ROUTE_EXIST);
+    if (exists) throw new BadRequestException('route', PROXY_ROUTE_EXIST);
   }
 
   private async checkRouteName(name: string, excludeId?: number) {
@@ -98,7 +125,8 @@ export class ProxyService {
     if (excludeId) where.id = { [Op.ne]: excludeId };
 
     const exists = await this.proxyRoutesRepo.findOne({ where });
-    if (exists) throw new ConflictException('route', PROXY_ROUTE_EXIST);
+    console.log(exists);
+    if (exists) throw new BadRequestException('route', PROXY_ROUTE_EXIST);
   }
 
   async getProxyRouteById(id: number) {
