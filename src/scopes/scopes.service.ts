@@ -8,6 +8,7 @@ import {
   CreateScopeDto,
   DeleteScopeDto,
   GetScopesDto,
+  UpdateScopeDto,
 } from './dto';
 import { ServiceModel } from './models/service.model';
 import { BadRequestException } from 'src/common/exceptions';
@@ -47,9 +48,8 @@ export class ScopesService {
   }
 
   async getScopesList(dto: GetScopesDto) {
-    const attributes: string[] = ['key', 'title', 'ttl', 'status'];
     if (!dto.query) {
-      return this.scopesRepository.findAndCountAll({ attributes });
+      return this.scopesRepository.findAndCountAll();
     }
 
     const where: WhereOptions<ScopeModel> = {
@@ -69,23 +69,33 @@ export class ScopesService {
 
     return this.scopesRepository.findAndCountAll({
       where,
-      attributes,
     });
   }
 
   async createScope(dto: CreateScopeDto) {
-    const { name, serviceId, requiresApproval, title, ttl } = dto;
-    const service = await this.servicesRepository.findByPk(serviceId);
-    if (!service) throw new BadRequestException('service', SERVICE_NOT_FOUND);
-
-    const scopeTtl = ttl ? Math.max(ttl, MIN_SCOPE_TTL) : MIN_SCOPE_TTL;
-    const key = `${service.name}:${name}`.toLowerCase();
+    const { name, requiresApproval, title, ttl } = dto;
+    const scopeTtl = this.getScopeTtl(ttl);
+    const key = name.toLowerCase();
     return this.scopesRepository.create({
+      serviceId: 1,
       key,
       title,
       ttl: scopeTtl,
       requiresApproval,
     });
+  }
+
+  async updateScope(dto: UpdateScopeDto) {
+    const { requiresApproval, title, ttl } = dto;
+    const scope = await this.getScopeByKey(dto.scopeKey);
+    if (!scope) throw new BadRequestException('scope', SCOPE_NOT_FOUND);
+
+    const scopeTtl = this.getScopeTtl(ttl);
+    scope.ttl = scopeTtl;
+    scope.title = title;
+    scope.requiresApproval = requiresApproval;
+
+    return await scope.save();
   }
 
   async deleteScope(dto: DeleteScopeDto) {
@@ -124,5 +134,9 @@ export class ScopesService {
 
   async getScopeByKey(key: string) {
     return this.scopesRepository.findByPk(key);
+  }
+
+  private getScopeTtl(ttl: number) {
+    return ttl ? Math.max(ttl, MIN_SCOPE_TTL) : MIN_SCOPE_TTL;
   }
 }

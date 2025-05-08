@@ -17,6 +17,7 @@ import {
   DeleteScopeDto,
   GetScopeDto,
   GetScopesDto,
+  UpdateScopeDto,
 } from './dto';
 import { RolesEnum } from 'src/configs/roles';
 
@@ -31,7 +32,7 @@ export class ScopesController {
   }
 
   @Get(':scopeKey')
-  @ApiOperation({ summary: 'get scopes list' })
+  @ApiOperation({ summary: 'get scope details' })
   async getScopeDetails(@Param() dto: GetScopeDto) {
     return this.scopesService.getScope(dto.scopeKey);
   }
@@ -41,6 +42,13 @@ export class ScopesController {
   @ApiOperation({ summary: 'create scope' })
   async createScope(@Body() dto: CreateScopeDto) {
     return this.scopesService.createScope(dto);
+  }
+
+  @Patch()
+  @Roles(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'update scope' })
+  async updateScope(@Body() dto: UpdateScopeDto) {
+    return this.scopesService.updateScope(dto);
   }
 
   @Patch('status')
