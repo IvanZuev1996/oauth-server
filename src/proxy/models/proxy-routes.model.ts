@@ -34,6 +34,10 @@ export class ProxyRouteModel extends Model<ProxyRouteModel> {
   @Column(DataType.STRING)
   externalPath: string;
 
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  externalHost: string;
+
   @HasMany(() => ProxyRouteScopeModel)
   scopes: ProxyRouteScopeModel[];
 }

@@ -26,6 +26,11 @@ export class CreateProxyRouteDto {
   readonly externalPath: string;
 
   @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  readonly externalHost: string;
+
+  @ApiProperty()
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

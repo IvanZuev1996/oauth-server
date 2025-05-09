@@ -84,6 +84,7 @@ export class ProxyService {
     route.name = dto.name;
     route.method = dto.method;
     route.externalPath = dto.externalPath;
+    route.externalHost = dto.externalHost;
     return await route.save();
   }
 

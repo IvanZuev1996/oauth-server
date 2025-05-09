@@ -7,6 +7,7 @@ export class UpdateProxyRouteDto extends PickType(CreateProxyRouteDto, [
   'method',
   'name',
   'scopes',
+  'externalHost',
 ]) {
   @ApiProperty()
   @IsNotEmpty()
