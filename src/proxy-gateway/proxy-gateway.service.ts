@@ -23,8 +23,9 @@ export class ProxyGatewayService {
   ) {}
 
   async handleRequest(req: Request, res: Response, clientId: string) {
+    const externalPath = req.originalUrl.split('/api/proxy-gateway')[1];
     const route = await this.proxyService.getProxyRouteByPath(
-      req.originalUrl,
+      externalPath,
       req.method as RestMethods,
     );
 
@@ -43,7 +44,7 @@ export class ProxyGatewayService {
       const response = await firstValueFrom(
         this.httpService.request({
           method: req.method,
-          url: route.externalPath,
+          url: route.externalHost + route.externalPath,
           headers: {
             ...req.headers,
             'x-proxy-secret': secret,
@@ -54,6 +55,7 @@ export class ProxyGatewayService {
       return res.status(response.status).send(response.data);
     } catch (error) {
       this.logger.error('Error during proxy request:', error);
+      console.log(error);
       if (error.response) {
         return res
           .status(error.response.status)

@@ -39,6 +39,7 @@ export class ProxyService {
         model: ProxyRouteScopeModel,
         attributes: ['scopeKey'],
       },
+      order: [['id', 'ASC']],
     });
 
     return {
