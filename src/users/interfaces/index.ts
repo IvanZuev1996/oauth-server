@@ -1,6 +1,8 @@
+import { RolesEnum } from 'src/configs/roles';
+
 export interface UserRole {
   id: number;
-  name: string;
+  name: RolesEnum;
 }
 
 export interface UserProfile {

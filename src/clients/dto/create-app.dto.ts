@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAppDto {
   @ApiProperty()
@@ -8,9 +8,9 @@ export class CreateAppDto {
   readonly name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  readonly scope: string;
+  @IsArray()
+  @IsString({ each: true })
+  readonly scopes: string[];
 
   @ApiProperty()
   @IsNotEmpty()

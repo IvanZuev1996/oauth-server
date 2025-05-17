@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { OAuthCodesModel } from './models/oauth-codes.model';
 import { Repository } from 'sequelize-typescript';
@@ -11,14 +11,16 @@ import {
 } from 'src/common/exceptions';
 import {
   ACCESS_DENIED,
+  CLIENT_NOT_FOUND,
   CODE_CHALLENGE_METHOD_INCORRECT,
   OAUTH_CODE_EXPIRED,
+  RESPONSE_TYPE_INCORRECT,
 } from 'src/constants';
 import { ClientsService } from 'src/clients/clients.service';
 import { nanoid } from 'nanoid';
-import { addMinutes, isAfter } from 'date-fns';
+import { addMinutes, addSeconds, isAfter } from 'date-fns';
 import { AUTH_CODE_LENGTH, AUTH_CODE_TTL } from 'src/configs/oauth';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import {
   CreateAuthCodeAttributes,
@@ -28,6 +30,9 @@ import {
   OAuthTokenPayload,
 } from './interfaces';
 import { ScopesService } from 'src/scopes/scopes.service';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
+import { ClientStatus } from 'src/clients/interfaces';
 
 @Injectable()
 export class OauthService {
@@ -40,6 +45,9 @@ export class OauthService {
     @InjectModel(ConsentsModel)
     private consentsRepository: Repository<ConsentsModel>,
 
+    /* Logger */
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+
     /* Services */
     private readonly clientsService: ClientsService,
     private readonly scopesService: ScopesService,
@@ -47,59 +55,104 @@ export class OauthService {
   ) {}
 
   async authorize(dto: AuthorizeDto, userId: number) {
-    const { clientId, codeChallengeMethod, redirectUri, scope, state } = dto;
-    const client = await this.clientsService.getClientByClientId(clientId);
+    const {
+      client_id,
+      redirect_uri,
+      code_challenge_method,
+      code_challenge,
+      response_type,
+      scope,
+      state,
+    } = dto;
+    const client = await this.clientsService.getClientByClientId(client_id);
 
-    if (codeChallengeMethod !== 'S256') {
+    if (client.status !== ClientStatus.ACTIVE || client.isBanned) {
+      this.logger.warn(
+        `OAuth Aurhorize: Client is not active or banned. 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
+      throw new BadGatewayException('client', CLIENT_NOT_FOUND);
+    }
+
+    if (code_challenge_method !== 'S256') {
+      this.logger.warn(
+        `OAuth Aurhorize: Not valid code challenge method (${code_challenge_method}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
       throw new BadRequestException(
         'codeChallengeMethod',
         CODE_CHALLENGE_METHOD_INCORRECT,
       );
     }
 
-    if (redirectUri && redirectUri !== client.redirectUri) {
+    if (response_type !== 'code') {
+      this.logger.warn(
+        `OAuth Aurhorize: Reponse type is not valid (${response_type}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
+      throw new BadRequestException('responseType', RESPONSE_TYPE_INCORRECT);
+    }
+
+    if (redirect_uri && redirect_uri !== client.redirectUri) {
+      this.logger.warn(
+        `OAuth Aurhorize: Redirect uri is not matched (${redirect_uri}). 
+         UserId: ${userId} on clientId: ${client_id}`,
+      );
       throw new BadRequestException('redirectUri', ACCESS_DENIED);
     }
 
     const expiresAt = addMinutes(new Date(), AUTH_CODE_TTL);
     const code = nanoid(AUTH_CODE_LENGTH);
+    const scopes = scope || client.scopes.join(' ');
 
     await this.saveAuthCode({
-      ...dto,
       code,
       userId,
       expiresAt,
+      scope: scopes,
+      clientId: client_id,
+      codeChallenge: code_challenge,
       state: state || null,
       redirectUri: client.redirectUri,
     });
-    await this.saveConsent({ userId, clientId, scope });
+    await this.saveConsent({ userId, clientId: client_id, scope: scopes });
 
-    const url = `${client.redirectUri}?code=${code}&state=${state}`;
+    this.logger.info(
+      `Success OAuth Authorize. UserId: ${userId} on clientId: ${client_id}`,
+    );
+
+    let url = `${client.redirectUri}?code=${code}`;
+    if (state) url += '&state=' + state;
+
     return { url };
   }
 
   async exchangeAuthCode(dto: ExchangeAuthCodeDto) {
-    const { clientId, code, codeVerifier } = dto;
+    const { client_id, code, code_verifier } = dto;
 
-    const client = await this.clientsService.getClientByClientId(clientId);
+    const client = await this.clientsService.getClientByClientId(client_id);
+    if (client.status !== ClientStatus.ACTIVE || client.isBanned) {
+      throw new BadRequestException('client', CLIENT_NOT_FOUND);
+    }
+
     const oauthCode = await this.oauthCodesRepository.findOne({
-      where: { code, clientId },
+      where: { code, clientId: client_id },
     });
     if (!oauthCode) throw new BadRequestException('code', ACCESS_DENIED);
 
     const isOauthCodeValid = isAfter(oauthCode.expiresAt, new Date());
     if (!isOauthCodeValid) {
+      this.logger.error(`Exchange OAuth code expired. ClientId: ${client_id}`);
       throw new BadRequestException('code', OAUTH_CODE_EXPIRED);
     }
 
-    // TODO:
-    // this.validateCodeVerifier(codeVerifier, oauthCode.codeChallenge);
-    const activeToken = await this.getTokenByClientId(clientId);
+    this.validateCodeVerifier(code_verifier, oauthCode.codeChallenge);
+    const activeToken = await this.getTokenByClientId(client_id);
     if (activeToken) await activeToken.destroy();
     await oauthCode.destroy();
 
     const tokensPayload: OAuthTokenPayload = {
-      clientId,
+      clientId: client_id,
       clientName: client.name,
       userId: oauthCode.userId,
       scope: oauthCode.scope,
@@ -110,16 +163,16 @@ export class OauthService {
     const { access_token, refresh_token, type, refreshTokenId } =
       await this.generateTokens(tokensPayload, client.clientSecret, ttl);
 
-    await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId });
+    await this.saveToken({ ...tokensPayload, tokenId: refreshTokenId }, ttl);
+    this.logger.info(`Success exchange OAuth code. ClientId: ${client_id}`);
 
     return { access_token, refresh_token, type, scope: tokensPayload.scope };
   }
 
   async refreshOAuthToken(dto: RefreshOAuthTokenDto, clientId: string) {
-    const { refreshToken } = dto;
     const client = await this.clientsService.getClientByClientId(clientId);
     const tokenPayload = await this.verifyClientByRefreshToken(
-      refreshToken,
+      dto.refresh_token,
       client.clientSecret,
     );
     if (!tokenPayload) throw new UnauthorizedException();
@@ -136,7 +189,12 @@ export class OauthService {
         tokenPayload.exp,
       );
 
-    await this.saveToken({ ...tokenPayload, tokenId: refreshTokenId });
+    await this.saveToken(
+      { ...tokenPayload, tokenId: refreshTokenId },
+      tokenPayload.exp,
+    );
+
+    this.logger.info(`Success refresh OAuth token. ClientId: ${clientId}`);
 
     return { access_token, refresh_token, type };
   }
@@ -167,8 +225,8 @@ export class OauthService {
 
   // #region: CREATE */
 
-  private async saveToken(payload: CreateOAuthTokensAttributes) {
-    const expiresAt = addMinutes(new Date(), 60);
+  private async saveToken(payload: CreateOAuthTokensAttributes, ttl: number) {
+    const expiresAt = addSeconds(new Date(), ttl);
 
     const existToken = await this.getTokenByClientId(payload.clientId);
     if (existToken) await existToken.destroy();
@@ -272,6 +330,7 @@ export class OauthService {
     const hashedCodeVerifier = hash.digest('base64url');
 
     if (hashedCodeVerifier !== codeChallenge) {
+      this.logger.error(`Code verifier is not valid`);
       throw new BadRequestException('codeVerifier', ACCESS_DENIED);
     }
   }
@@ -279,7 +338,7 @@ export class OauthService {
   async validateRefreshTokenByTokenId(tokenId: string) {
     const token = await this.getTokenByTokenId(tokenId);
     const isTokenValid = token && isAfter(token.expiresAt, new Date());
-    if (!isTokenValid) throw new UnauthorizedException();
+    if (!isTokenValid || token.isRevoked) throw new UnauthorizedException();
     return token;
   }
 }

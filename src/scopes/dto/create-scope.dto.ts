@@ -9,10 +9,6 @@ import {
 
 export class CreateScopeDto {
   @ApiProperty()
-  @IsNumber()
-  readonly serviceId: number;
-
-  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   readonly name: string;

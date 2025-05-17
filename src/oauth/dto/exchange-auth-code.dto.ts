@@ -2,7 +2,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { AuthorizeDto } from './authorize.dto';
 
-export class ExchangeAuthCodeDto extends PickType(AuthorizeDto, ['clientId']) {
+export class ExchangeAuthCodeDto extends PickType(AuthorizeDto, ['client_id']) {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -11,5 +11,5 @@ export class ExchangeAuthCodeDto extends PickType(AuthorizeDto, ['clientId']) {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  readonly codeVerifier: string;
+  readonly code_verifier: string;
 }

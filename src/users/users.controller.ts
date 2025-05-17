@@ -1,7 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { GetCurrentUserId, OAuth, Scopes } from 'src/common/decorators';
+import {
+  GetCurrentOauthUserId,
+  GetCurrentUserId,
+  OAuth,
+} from 'src/common/decorators';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -16,10 +20,9 @@ export class UsersController {
   }
 
   @OAuth()
-  @Scopes('service1:scope1')
-  @ApiOperation({ summary: 'test' })
-  @Get('test')
-  test() {
-    return 'Да, прошло!';
+  @ApiOperation({ summary: 'get user info (OAUTH)' })
+  @Get('user-info')
+  getOAuthUserInfo(@GetCurrentOauthUserId() userId: number) {
+    return this.usersService.getMe(userId);
   }
 }

@@ -5,5 +5,5 @@ export class RefreshOAuthTokenDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  readonly refreshToken: string;
+  readonly refresh_token: string;
 }

@@ -1,6 +1,7 @@
 import {
   AllowNull,
   AutoIncrement,
+  BelongsTo,
   Column,
   DataType,
   Default,
@@ -10,6 +11,7 @@ import {
   Table,
   Unique,
 } from 'sequelize-typescript';
+import { ClientModel } from 'src/clients/models/client.model';
 import { UserModel } from 'src/users/models/user.model';
 
 @Table({
@@ -27,6 +29,7 @@ export class OAuthCodesModel extends Model<OAuthCodesModel> {
   @Column(DataType.INTEGER)
   userId: number;
 
+  @ForeignKey(() => ClientModel)
   @AllowNull(false)
   @Column(DataType.STRING)
   clientId: string;
@@ -55,4 +58,12 @@ export class OAuthCodesModel extends Model<OAuthCodesModel> {
   @Default(null)
   @Column(DataType.STRING)
   state: string;
+
+  /* Relationships */
+
+  @BelongsTo(() => UserModel)
+  user: UserModel;
+
+  @BelongsTo(() => ClientModel)
+  client: ClientModel;
 }

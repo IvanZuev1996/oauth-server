@@ -1,4 +1,8 @@
-import { PickType } from '@nestjs/swagger';
-import { UpdateAppDto } from './update-app.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
-export class DeleteAppDto extends PickType(UpdateAppDto, ['clientId']) {}
+export class DeleteAppDto {
+  @ApiProperty()
+  @IsString()
+  clientId: string;
+}

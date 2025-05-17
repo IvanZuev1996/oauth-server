@@ -10,6 +10,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 import { UserModel } from 'src/users/models/user.model';
+import { ClientScopesOptions, ClientStatus } from '../interfaces';
 
 @Table({ tableName: 'clients' })
 export class ClientModel extends Model<ClientModel> {
@@ -22,7 +23,7 @@ export class ClientModel extends Model<ClientModel> {
   @AllowNull(false)
   @ForeignKey(() => UserModel)
   @Column(DataType.INTEGER)
-  readonly userId: number;
+  userId: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -41,11 +42,26 @@ export class ClientModel extends Model<ClientModel> {
   companyEmail: string;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
-  scope: string;
+  @Column(DataType.ARRAY(DataType.STRING))
+  scopes: string[];
 
   @AllowNull(true)
   @Default(null)
   @Column(DataType.STRING)
   img: string;
+
+  @AllowNull(true)
+  @Default(null)
+  @Column(DataType.JSONB)
+  scopesOptions: ClientScopesOptions;
+
+  @AllowNull(true)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isBanned: boolean;
+
+  @AllowNull(false)
+  @Default(ClientStatus.PENDING)
+  @Column(DataType.ENUM(...Object.values(ClientStatus)))
+  status: ClientStatus;
 }
