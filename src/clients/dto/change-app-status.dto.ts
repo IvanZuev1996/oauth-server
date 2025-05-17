@@ -51,15 +51,9 @@ class ScopesOptions {
 
   @ApiProperty()
   @IsOptional()
-  @ValidateNested()
-  @Type(() => FromTo)
-  dayOfWeek?: FromTo;
-
-  @ApiProperty()
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => FromTo)
-  dayOfMonth?: FromTo;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  dayOfWeek?: number[];
 
   @ApiProperty()
   @IsOptional()

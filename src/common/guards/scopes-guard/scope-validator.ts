@@ -1,4 +1,4 @@
-import { getDay, getHours, getDate } from 'date-fns';
+import { getDay, getHours } from 'date-fns';
 import { Request } from 'express';
 import { CacheService } from 'src/cache/cache.service';
 import { ClientScopesOptions } from 'src/clients/interfaces';
@@ -42,11 +42,6 @@ export class ScopesValidator {
       this.validateDayOfWeek(options.dayOfWeek);
     }
 
-    // 4. Validate dayOfMonth
-    if (options.dayOfMonth) {
-      this.validateDayOfMonth(options.dayOfMonth);
-    }
-
     // 5. Validate requestsPerMinute
     if (options.requestsPerMinute) {
       await this.validateRequestsPerMinute(clientId, options.requestsPerMinute);
@@ -80,19 +75,11 @@ export class ScopesValidator {
     }
   }
 
-  private validateDayOfWeek(options: FromToOptions) {
-    const now = new Date();
-    const currentDay = getDay(now);
-    if (currentDay < options.from || currentDay > options.to) {
-      throw new ForbiddenException('dayOfWeek', DAY_OF_WEEK_BLOCKED);
-    }
-  }
+  private validateDayOfWeek(allowedDays: number[]) {
+    const currentDay = new Date().getDay();
 
-  private validateDayOfMonth(options: FromToOptions) {
-    const now = new Date();
-    const currentDate = getDate(now);
-    if (currentDate < options.from || currentDate > options.to) {
-      throw new ForbiddenException('dayOfMonth', DAY_OF_MONTH_BLOCKED);
+    if (!allowedDays.includes(currentDay)) {
+      throw new ForbiddenException('dayOfWeek', DAY_OF_WEEK_BLOCKED);
     }
   }
 

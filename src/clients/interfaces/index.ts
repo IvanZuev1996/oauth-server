@@ -14,10 +14,10 @@ export interface ClientScopesOptions {
   timeOfDay?: FromToOptions;
 
   /* Дни недели в которые будет разрешен доступ */
-  dayOfWeek?: FromToOptions;
+  dayOfWeek?: number[];
 
   /* Дни месяца в которые будет выдан доступ */
-  dayOfMonth?: FromToOptions;
+  dayOfMonth?: number[];
 
   /* Количество запросов в минуту */
   requestsPerMinute?: number;
